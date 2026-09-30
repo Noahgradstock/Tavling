@@ -1,0 +1,13 @@
+{
+  "_about": "Synthetic usage and outcome history per source over the last 12 months (metrics 4 and 5). 'corrections_after' = payslips that had to be corrected after this source was used for a decision.",
+  "usage": [
+    { "source": "SRC-01", "times_used": 64, "corrections_after": 0, "correction_context": [], "confirmations": [ { "by": "P-MARC", "on": "2026-01-15", "note": "Checked against KB-2025-MV-10 and the engine parameter." } ] },
+    { "source": "SRC-02", "times_used": 212, "corrections_after": 3, "correction_context": ["used in 2026 after the rule changed"], "confirmations": [ { "by": "P-ELS", "on": "2025-01-06" } ] },
+    { "source": "SRC-03", "times_used": 19, "corrections_after": 0, "correction_context": [], "confirmations": [ { "by": "P-JULIEN", "on": "2026-02-03" } ] },
+    { "source": "SRC-04", "times_used": 8, "corrections_after": 0, "correction_context": [], "confirmations": [] },
+    { "source": "SRC-05", "times_used": 9, "corrections_after": 3, "correction_context": ["BE/PC200 2026: set to €8 instead of €10", "client complaint: lower net benefit than promised", "BE/PC200 2026: set to €8 instead of €10"], "confirmations": [] },
+    { "source": "SRC-06", "times_used": 2, "corrections_after": 0, "correction_context": [], "confirmations": [] },
+    { "source": "SRC-07", "times_used": 23, "corrections_after": 4, "correction_context": ["new client onboarded at €8 in 2026", "new client onboarded at €8 in 2026", "new client onboarded at €8 in 2026", "ticket reopened by client"], "confirmations": [] },
+    { "source": "SRC-08", "times_used": 11, "corrections_after": 2, "correction_context": ["FR-speaking client set to €8 in 2026", "FR-speaking client set to €8 in 2026"], "confirmations": [] }
+  ]
+}

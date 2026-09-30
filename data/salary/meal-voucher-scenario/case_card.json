@@ -1,0 +1,27 @@
+{
+  "ticket": {
+    "id": "TCK-2026-48213",
+    "received_at": "2026-09-30T15:40:00+02:00",
+    "from": { "name": "Sara Wouters", "role": "HR manager", "client": "Brouwerij De Leeuw NV" },
+    "channel": "client portal",
+    "language": "nl",
+    "text": "Dag Lien, we willen onze maaltijdcheques voor de bedienden optrekken tot het maximum vanaf de loonrun van oktober. Wat is het maximumbedrag per cheque in 2026? Een collega van ons hoorde €8, maar ik las ergens €10. We moeten dit morgen doorgeven. Alvast bedankt! Sara",
+    "text_en": "Hi Lien, we want to raise our meal vouchers for white-collar staff to the maximum from the October payroll run. What is the maximum amount per voucher in 2026? A colleague heard €8, but I read €10 somewhere. We need to pass this on tomorrow. Thanks! Sara"
+  },
+  "consultant": { "id": "P-LIEN", "name": "Lien Peeters" },
+  "case_card": {
+    "country": { "v": "BE", "via": "client_master_data" },
+    "pc": { "v": "200", "via": "client_master_data" },
+    "worker_type": { "v": "white_collar", "via": "ticket_text", "evidence": "voor de bedienden" },
+    "topic": { "v": "meal_vouchers", "via": "ticket_text", "evidence": "maaltijdcheques" },
+    "case_date": { "v": "2026-10-01", "via": "ticket_text", "evidence": "vanaf de loonrun van oktober" },
+    "question_key": "BE/PC200/meal_voucher_max_face_value"
+  },
+  "alt_case_card_for_demo_toggle": {
+    "country": { "v": "NL", "via": "manual" },
+    "pc": { "v": null, "via": "manual" },
+    "worker_type": { "v": "white_collar", "via": "manual" },
+    "topic": { "v": "meal_vouchers", "via": "manual" },
+    "case_date": { "v": "2026-10-01", "via": "manual" }
+  }
+}

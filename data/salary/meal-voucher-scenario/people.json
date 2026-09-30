@@ -1,0 +1,11 @@
+[
+  { "id": "P-LIEN", "name": "Lien Peeters", "role": "Payroll consultant (junior)", "team": "Payroll BE – Ghent", "status": "active", "since": "2026-03-01", "expertise": [], "decisions": {} },
+  { "id": "P-MARC", "name": "Marc Vandenberghe", "role": "Senior payroll expert", "team": "Payroll BE – Antwerp", "status": "active", "since": "2004-09-01", "expertise": ["PC 200", "meal_vouchers", "end_of_year_bonus"], "decisions": { "BE/PC200": 31 }, "avg_response_min": 12 },
+  { "id": "P-ELS", "name": "Els Janssens", "role": "Knowledge owner Payroll BE (former)", "team": "Payroll BE", "status": "left", "left_on": "2025-06-30", "expertise": ["PC 200"], "decisions": { "BE/PC200": 18 } },
+  { "id": "P-TOM", "name": "Tom De Smet", "role": "Payroll consultant", "team": "Payroll BE – Ghent", "status": "active", "since": "2022-02-01", "expertise": ["PC 200"], "decisions": { "BE/PC200": 4 } },
+  { "id": "P-SOFIE", "name": "Sofie Claes", "role": "Client manager", "team": "Client Services BE", "status": "active", "since": "2019-05-01", "expertise": [], "decisions": {} },
+  { "id": "P-PIETER", "name": "Pieter Maes", "role": "Onboarding lead", "team": "Payroll BE – Onboarding", "status": "active", "since": "2017-01-01", "expertise": ["onboarding"], "decisions": { "BE/PC200": 6 } },
+  { "id": "P-JULIEN", "name": "Julien Lambert", "role": "Payroll expert", "team": "Payroll BE – Liège", "status": "active", "since": "2012-04-01", "expertise": ["CP 124", "CP 200"], "decisions": { "BE/PC124": 27 } },
+  { "id": "P-DAAN", "name": "Daan de Vries", "role": "Payroll policy owner", "team": "Payroll NL – Utrecht", "status": "active", "since": "2020-01-01", "expertise": ["NL"], "decisions": { "NL": 22 } },
+  { "id": "P-AMIRA", "name": "Amira Benali", "role": "Payroll consultant", "team": "Payroll BE – Antwerp", "status": "active", "since": "2024-01-01", "expertise": [], "decisions": { "BE/PC200": 2 }, "_demo": "second user who sees Lien's decision 2 days later" }
+]

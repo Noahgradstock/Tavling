@@ -1,0 +1,65 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1733829300412",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2025-12-10T11:15:00.412Z",
+      "from": { "user": { "id": "u-tclaes", "displayName": "Tom Claes" } },
+      "body": { "contentType": "html", "content": "<p>I think indexation for PC 200 will be 2.1% in January, that's what the guide on SharePoint says</p>" },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1736071200953",
+          "replyToId": "1733829300412",
+          "createdDateTime": "2026-01-05T08:40:00.953Z",
+          "from": { "user": { "id": "u-adesmet", "displayName": "Anna De Smet" } },
+          "body": { "contentType": "html", "content": "<p>Official notice is out: PC 200 indexation is <b>1.8%</b>, not 2.1%. The 2.1 was the Planning Bureau estimate. Please check your January runs.</p>" },
+          "attachments": [
+            { "id": "a1", "contentType": "reference", "contentUrl": "https://sdworx.sharepoint.com/sites/PayrollBE/Shared Documents/Official/PC200_IDX_2026-01.pdf", "name": "PC200_IDX_2026-01.pdf" }
+          ],
+          "reactions": [
+            { "reactionType": "like", "user": { "user": { "id": "u-jwouters", "displayName": "Jan Wouters" } } },
+            { "reactionType": "like", "user": { "user": { "id": "u-lverbeke", "displayName": "Lotte Verbeke" } } },
+            { "reactionType": "like", "user": { "user": { "id": "u-smaes", "displayName": "Sofie Maes" } } }
+          ]
+        },
+        {
+          "id": "1736154000287",
+          "replyToId": "1733829300412",
+          "createdDateTime": "2026-01-06T09:00:00.287Z",
+          "from": { "user": { "id": "u-smaes", "displayName": "Sofie Maes" } },
+          "body": { "contentType": "html", "content": "<p>pretty sure we used 2.1% in the last run for PC 200?</p>" },
+          "attachments": [],
+          "reactions": []
+        },
+        {
+          "id": "1736155800634",
+          "replyToId": "1733829300412",
+          "createdDateTime": "2026-01-06T09:30:00.634Z",
+          "from": { "user": { "id": "u-adesmet", "displayName": "Anna De Smet" } },
+          "body": { "contentType": "html", "content": "<p>@Sofie that was the draft estimate. It's 1.8%. Can you correct the runs for your clients before the 15th?</p>" },
+          "attachments": [],
+          "reactions": [
+            { "reactionType": "like", "user": { "user": { "id": "u-smaes", "displayName": "Sofie Maes" } } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1736506800118",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-01-10T11:00:00.118Z",
+      "from": { "user": { "id": "u-ldevries", "displayName": "Lars de Vries" } },
+      "body": { "contentType": "html", "content": "<p>FYI for the BE colleagues with Dutch entities: NL has no automatic indexation. Increases come from the CAO, so don't apply the Belgian % there.</p>" },
+      "attachments": [],
+      "reactions": [
+        { "reactionType": "like", "user": { "user": { "id": "u-adesmet", "displayName": "Anna De Smet" } } }
+      ],
+      "replies": []
+    }
+  ]
+}
