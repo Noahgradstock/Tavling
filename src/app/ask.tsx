@@ -267,7 +267,7 @@ function Thinking({ p, loading, hit, n }: { p: number; loading: boolean; hit: As
       : p < CONNECT
         ? connectText
         : p < SCAN
-        ? `Found ${n} documents · reading them for what answers your question · ${scannedCount(seg(p, CONNECT, SCAN), n)}/${n}`
+        ? `Reading ${n} documents · ${scannedCount(seg(p, CONNECT, SCAN), n)}/${n}`
         : stage === 0
         ? `Found ${h.claims.length + h.excluded.length} sources that mention this`
         : stage === 1
@@ -275,13 +275,21 @@ function Thinking({ p, loading, hit, n }: { p: number; loading: boolean; hit: As
           : stage === 2
             ? `${h.claims.filter((c) => c.score >= 0.75).length} sources pass the trust bar`
             : "Choosing the answer";
+  // What the scan step does, in one plain sentence.
+  const explain =
+    h && p >= CONNECT && p < SCAN
+      ? "The system finds the documents relevant to your question and scans them for signals it can compare: what each one says, who wrote it, when, and for which country. That is how it judges which sources apply and how well they fit this question. Every step is logged."
+      : null;
   return (
-    <div className="flex items-center gap-3">
-      <span className="relative flex h-2.5 w-2.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1463ff] opacity-60" />
-        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#1463ff]" />
-      </span>
-      <span className="font-serif text-2xl sm:text-3xl">{text}</span>
+    <div>
+      <div className="flex items-center gap-3">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1463ff] opacity-60" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#1463ff]" />
+        </span>
+        <span className="font-serif text-2xl sm:text-3xl">{text}</span>
+      </div>
+      {explain && <p className="mt-2 max-w-2xl pl-[22px] text-sm leading-relaxed text-neutral-500">{explain}</p>}
     </div>
   );
 }
