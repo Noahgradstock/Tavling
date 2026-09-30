@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { createSession, hashPassword, loginBlocked, recordLoginFailure, sameOrigin, SESSION_TTL_S, verifyPassword, verifySession } from "./auth";
+import { createSession, hashPassword, loginBlocked, rateLimit, recordLoginFailure, sameOrigin, SESSION_TTL_S, verifyPassword, verifySession } from "./auth";
 
 // auth.ts reads the environment on every call, so setting it here is enough.
 process.env.SESSION_SECRET = "test-secret-that-is-at-least-32-characters-long";
@@ -30,10 +30,18 @@ test("passwords are checked against scrypt hashes", () => {
   assert.equal(verifyPassword("anna", "correct horse"), false);
 });
 
-test("repeated failed logins block the account", () => {
-  for (let i = 0; i < 5; i++) recordLoginFailure("tom");
-  assert.equal(loginBlocked("tom"), true);
-  assert.equal(loginBlocked("sofie"), false);
+test("repeated failed logins block that account from that IP only", () => {
+  for (let i = 0; i < 5; i++) recordLoginFailure("tom", "1.1.1.1");
+  assert.equal(loginBlocked("tom", "1.1.1.1"), true);
+  assert.equal(loginBlocked("tom", "2.2.2.2"), false); // a stranger cannot lock Tom out everywhere
+  assert.equal(loginBlocked("sofie", "1.1.1.1"), false);
+});
+
+test("rate limits stop after the maximum and reset after the window", () => {
+  const t = 1_000_000;
+  for (let i = 0; i < 3; i++) assert.equal(rateLimit("ask:x", 3, 60_000, t), true);
+  assert.equal(rateLimit("ask:x", 3, 60_000, t), false);
+  assert.equal(rateLimit("ask:x", 3, 60_000, t + 60_001), true);
 });
 
 test("cross-site requests are refused", () => {

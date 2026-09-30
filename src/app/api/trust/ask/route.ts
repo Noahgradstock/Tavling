@@ -1,13 +1,16 @@
 import { ask, matchFact, parseContext } from "@/trust-engine";
 import { matchFactWithGemini } from "@/lib/gemini-match";
-import { currentUser, feedbackStore, forbidden, kb, now, readJson, unauthorized } from "@/lib/trust-server";
+import { currentUser, feedbackStore, forbidden, kb, now, readJson, tooManyRequests, unauthorized } from "@/lib/trust-server";
 import { maskPersonalData } from "@/lib/privacy";
-import { sameOrigin } from "@/lib/auth";
+import { rateLimit, sameOrigin } from "@/lib/auth";
 
 // POST { question, context: { country, pc?, client? } } -> answer with trust receipt
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return forbidden();
-  if (!currentUser(request)) return unauthorized();
+  const user = currentUser(request);
+  if (!user) return unauthorized();
+  // Each question can cost a Gemini call: 30 per user per minute is plenty for a person, not for a script.
+  if (!rateLimit(`ask:${user.id}`, 30, 60_000)) return tooManyRequests();
   const body = (await readJson(request)) as { question?: unknown; context?: unknown } | null;
   const question = typeof body?.question === "string" ? body.question.slice(0, 500) : "";
   const ctx = parseContext(body?.context, kb);

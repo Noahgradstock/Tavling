@@ -45,6 +45,7 @@ export async function matchFactWithGemini(question: string, facts: Fact[]): Prom
     const text: string | undefined = output?.content?.find((c: { type?: string }) => c.type === "text")?.text;
     const factKey = text ? JSON.parse(text).factKey : null;
     const match = typeof factKey === "string" && facts.some((f) => f.key === factKey) ? factKey : null;
+    if (cache.size >= 1_000) cache.delete(cache.keys().next().value!); // bounded: drop the oldest entry
     cache.set(cacheKey, match);
     return match;
   } catch (err) {

@@ -63,7 +63,9 @@ function teamsQuote(fileText: string, author: string | undefined, date: string, 
 // Wrapped lines are joined first so a sentence is never cut in half.
 function quote(fileText: string, value: string): string | null {
   const norm = (s: string) => s.toLowerCase().replace(/,/g, ".").replace(/\s+/g, " ");
-  const needle = norm(value.split(" ")[0]);
+  // Whole token only: "12" must not match "PC 124", "8" must not match "1978".
+  const esc = norm(value.split(" ")[0]).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const needle = new RegExp(`(^|[^\\p{L}\\p{N}])${esc}(?![\\p{L}\\p{N}]|[.,]\\p{N})`, "u");
   const sentences = fileText
     .replace(/<[^>]+>/g, " ")
     .split(/\n\s*\n/)
@@ -73,7 +75,7 @@ function quote(fileText: string, value: string): string | null {
     .flatMap((para) => para.split(/(?<=[.!?])\s+(?=[A-Z0-9"“])/))
     .map((x) => x.replace(/\s+/g, " ").trim())
     .filter((x) => !/^\d+\.?$/.test(x)); // drop list numbers like "3."
-  const k = sentences.findIndex((x) => x.length > 8 && norm(x).includes(needle));
+  const k = sentences.findIndex((x) => x.length > 8 && needle.test(norm(x)));
   if (k < 0) return null;
   const text = sentences[k];
   return text.length > 260 ? `${text.slice(0, 257)}…` : text;
