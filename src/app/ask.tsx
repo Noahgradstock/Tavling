@@ -12,13 +12,13 @@ import { Result } from "./result";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
-const THINKING_MS = 16_000; // animation time for the whole run; it pauses after every step
+const STEP_MS = 7_000; // each step plays slowly on its own…
+const PAUSE_MS = 1_500; // …then holds briefly before the next one starts
 const CONNECT = 0.16; // first: search the connected systems
 const SCAN = 0.42; // then scan the documents, then sort them
-// Where the demo pauses and waits for "Next step", and what that button says.
+// Where each step ends.
 const inFunnel = (q: number) => SCAN + (1 - SCAN) * q;
 const STOPS = [CONNECT - 0.001, SCAN - 0.001, inFunnel(0.09), inFunnel(0.62), inFunnel(0.8), 0.999, 1];
-const NEXT = ["Read the documents", "Sort them", "Check every source", "Apply the trust bar", "Choose the answer", "Show the answer"];
 
 type Ctx = { client?: string; country?: string; pc?: string };
 type Example = { question: string; context: Ctx; label?: string };
@@ -58,7 +58,7 @@ export default function Ask() {
   const [result, setResult] = useState<AskResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [run, setRun] = useState(0);
-  const { p, next, skip, waiting, idx } = useStepper(run, STOPS, THINKING_MS);
+  const { p, skip } = useStepper(run, STOPS, STEP_MS, PAUSE_MS);
 
   useEffect(() => {
     fetch("/api/trust/meta")
@@ -233,18 +233,9 @@ export default function Ask() {
             <div className="h-[380px]" />
           )}
           {hit && (
-            <div className="flex flex-col items-center gap-2">
-              <button
-                onClick={next}
-                disabled={!waiting}
-                className="rounded-full bg-[#161616] px-5 py-2.5 text-sm font-medium text-white shadow-[0_8px_24px_-10px_rgba(0,0,0,0.5)] transition hover:bg-black disabled:bg-neutral-300 disabled:shadow-none"
-              >
-                {waiting ? `Next step: ${NEXT[idx]} →` : "Working…"}
-              </button>
-              <button onClick={skip} className="text-xs text-neutral-400 hover:text-neutral-900">
-                Skip to the answer
-              </button>
-            </div>
+            <button onClick={skip} className="self-center text-xs text-neutral-400 hover:text-neutral-900">
+              Skip to the answer →
+            </button>
           )}
         </div>
       )}

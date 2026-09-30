@@ -70,9 +70,9 @@ export const shortReason = (reason: string) =>
         ? "Other client"
         : "Reported not applicable";
 
-// Like useTimeline, but the animation stops at each value in `stops` and waits for next().
-// A full 0 → 1 run takes `duration` ms of animation. skip() jumps to the end.
-export function useStepper(run: number, stops: number[], duration: number) {
+// Plays an animation from 0 to 1 in steps: each segment up to the next value in `stops` takes `stepMs`,
+// then it pauses `pauseMs` and moves on by itself. skip() jumps to the end.
+export function useStepper(run: number, stops: number[], stepMs: number, pauseMs: number) {
   const [p, setP] = useState(0);
   const [step, setStep] = useState({ run: 0, idx: 0 });
   const idx = step.run === run ? step.idx : 0;
@@ -87,25 +87,30 @@ export function useStepper(run: number, stops: number[], duration: number) {
       pRef.current = 0;
     }
     const from = pRef.current;
+    // A tiny last segment (e.g. showing the answer) should not take a whole step.
+    const ms = target - from < 0.01 ? 300 : stepMs;
     const t0 = performance.now();
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = (t: number) => {
-      const v = Math.min(target, from + (t - t0) / duration);
+      const v = Math.min(target, from + ((t - t0) / ms) * (target - from));
       pRef.current = v;
       setP(v);
       if (v < target) raf.current = requestAnimationFrame(tick);
+      else if (idx < stops.length - 1) timer = setTimeout(() => setStep({ run, idx: idx + 1 }), pauseMs);
     };
     raf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf.current);
-  }, [run, target, duration]);
-  const next = useCallback(() => setStep({ run, idx: Math.min(idx + 1, stops.length - 1) }), [run, idx, stops.length]);
+    return () => {
+      cancelAnimationFrame(raf.current);
+      clearTimeout(timer);
+    };
+  }, [run, idx, target, stepMs, pauseMs, stops.length]);
   const skip = useCallback(() => {
     cancelAnimationFrame(raf.current);
     pRef.current = 1;
     setP(1);
     setStep({ run, idx: stops.length - 1 });
   }, [run, stops.length]);
-  const waiting = !!run && p >= target && idx < stops.length - 1;
-  return { p, next, skip, waiting, idx };
+  return { p, skip, idx };
 }
 
 // Drives an animation from 0 to 1 over `duration` ms each time `run` changes. skip() jumps to the end.
