@@ -54,3 +54,19 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .brain-synapse { animation: none; }
 }
+
+/* Scanner line sweeping over a document excerpt. */
+.scan-line {
+  animation: scan-line 2.6s ease-in-out infinite;
+}
+
+@keyframes scan-line {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-line { animation: none; opacity: 0; }
+}

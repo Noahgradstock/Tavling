@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import type { Doc } from "@/lib/documents";
 import { DocCard, KindBadge, TrustTag, Viewer, type ClaimScores } from "./documents";
+import Pipeline from "./pipeline";
 
 type Status = "trusted" | "conflict" | "stale" | "orphan" | "empty";
 type SourceType = "official" | "sharepoint" | "teams" | "email";
@@ -268,6 +269,8 @@ export default function BrainMap({ data }: { data: BrainData }) {
           <Panel sel={sel} data={data} onSelect={select} onOpenFile={openFile} />
         </aside>
       </section>
+
+      <Pipeline data={data} />
 
       <section className="mt-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
