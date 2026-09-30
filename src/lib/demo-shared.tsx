@@ -73,7 +73,9 @@ export const shortReason = (reason: string) =>
 // Plays an animation from 0 to 1 in steps: each segment up to the next value in `stops` takes `stepMs`,
 // then it pauses `pauseMs` and moves on by itself. skip() jumps to the end.
 export function useStepper(run: number, stops: number[], stepMs: number, pauseMs: number) {
-  const [p, setP] = useState(0);
+  // Progress belongs to a run, so a new run starts at 0 instead of flashing the last run's end.
+  const [prog, setProg] = useState({ run: 0, p: 0 });
+  const p = prog.run === run ? prog.p : 0;
   const [step, setStep] = useState({ run: 0, idx: 0 });
   const idx = step.run === run ? step.idx : 0;
   const raf = useRef(0);
@@ -94,7 +96,7 @@ export function useStepper(run: number, stops: number[], stepMs: number, pauseMs
     const tick = (t: number) => {
       const v = Math.min(target, from + ((t - t0) / ms) * (target - from));
       pRef.current = v;
-      setP(v);
+      setProg({ run, p: v });
       if (v < target) raf.current = requestAnimationFrame(tick);
       else if (idx < stops.length - 1) timer = setTimeout(() => setStep({ run, idx: idx + 1 }), pauseMs);
     };
@@ -107,7 +109,7 @@ export function useStepper(run: number, stops: number[], stepMs: number, pauseMs
   const skip = useCallback(() => {
     cancelAnimationFrame(raf.current);
     pRef.current = 1;
-    setP(1);
+    setProg({ run, p: 1 });
     setStep({ run, idx: stops.length - 1 });
   }, [run, stops.length]);
   return { p, skip, idx };
