@@ -1,11 +1,13 @@
 import { parseFeedback } from "@/trust-engine";
-import { currentUser, feedbackStore, kb, now, readJson } from "@/lib/trust-server";
+import { currentUser, feedbackStore, forbidden, kb, now, readJson, unauthorized } from "@/lib/trust-server";
+import { sameOrigin } from "@/lib/auth";
 
-// POST { claimId, kind: correct|wrong|outdated|not_applicable, context } — the voter is the current user, never the body.
+// POST { claimId, kind: correct|wrong|outdated|not_applicable, context } — the voter is the signed-in user, never the body.
 export async function POST(request: Request) {
-  const userId = currentUser(request);
-  if (!userId) return Response.json({ error: "not signed in" }, { status: 401 });
-  const parsed = parseFeedback(await readJson(request), userId, kb, now());
+  if (!sameOrigin(request)) return forbidden();
+  const user = currentUser(request);
+  if (!user) return unauthorized();
+  const parsed = parseFeedback(await readJson(request), user.id, kb, now());
   if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
   feedbackStore.put(parsed.feedback);
   return Response.json({ ok: true });

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/trust-engine/*.test.ts"
+    "test": "tsx --test src/trust-engine/*.test.ts src/lib/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/vertex-sdk": "^0.20.0",

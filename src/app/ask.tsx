@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { customer } from "@/lib/knowledge";
 import type { AskResult, Client, FeedbackKind } from "@/trust-engine";
 import { cardsOf, useTimeline } from "@/lib/demo-shared";
@@ -9,8 +10,6 @@ import { Result } from "./result";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
-// DEMO ONLY: who is giving feedback. Replace with the signed-in user.
-const DEMO_USER = "sofie";
 const THINKING_MS = 7_000;
 
 type Ctx = { client?: string; country?: string; pc?: string };
@@ -25,6 +24,7 @@ const GENERAL: { key: string; label: string; ctx: Ctx }[] = [
 const DEMO_CASE: Example = { question: customer.question, context: { client: "brouwerij-de-kroon" } };
 
 export default function Ask() {
+  const router = useRouter();
   const [question, setQuestion] = useState("");
   const [asked, setAsked] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
@@ -58,6 +58,7 @@ export default function Ask() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ question: q, context: c }),
     });
+    if (res.status === 401) router.replace("/login");
     return (await res.json()) as AskResult;
   }
 
@@ -75,12 +76,14 @@ export default function Ask() {
     }
   }
 
+  // The voter is the signed-in user: the server reads it from the session cookie.
   async function vote(claimId: string, kind: FeedbackKind) {
-    await fetch("/api/trust/feedback", {
+    const res = await fetch("/api/trust/feedback", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-demo-user": DEMO_USER },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({ claimId, kind, context: ctx }),
     });
+    if (res.status === 401) return router.replace("/login");
     setResult(await fetchAnswer(asked, ctx));
   }
 
