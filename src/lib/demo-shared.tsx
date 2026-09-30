@@ -70,6 +70,44 @@ export const shortReason = (reason: string) =>
         ? "Other client"
         : "Reported not applicable";
 
+// Like useTimeline, but the animation stops at each value in `stops` and waits for next().
+// A full 0 → 1 run takes `duration` ms of animation. skip() jumps to the end.
+export function useStepper(run: number, stops: number[], duration: number) {
+  const [p, setP] = useState(0);
+  const [step, setStep] = useState({ run: 0, idx: 0 });
+  const idx = step.run === run ? step.idx : 0;
+  const raf = useRef(0);
+  const pRef = useRef(0);
+  const lastRun = useRef(0);
+  const target = stops[idx] ?? 1;
+  useEffect(() => {
+    if (!run) return;
+    if (lastRun.current !== run) {
+      lastRun.current = run;
+      pRef.current = 0;
+    }
+    const from = pRef.current;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const v = Math.min(target, from + (t - t0) / duration);
+      pRef.current = v;
+      setP(v);
+      if (v < target) raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, [run, target, duration]);
+  const next = useCallback(() => setStep({ run, idx: Math.min(idx + 1, stops.length - 1) }), [run, idx, stops.length]);
+  const skip = useCallback(() => {
+    cancelAnimationFrame(raf.current);
+    pRef.current = 1;
+    setP(1);
+    setStep({ run, idx: stops.length - 1 });
+  }, [run, stops.length]);
+  const waiting = !!run && p >= target && idx < stops.length - 1;
+  return { p, next, skip, waiting, idx };
+}
+
 // Drives an animation from 0 to 1 over `duration` ms each time `run` changes. skip() jumps to the end.
 export function useTimeline(run: number, duration: number) {
   const [p, setP] = useState(0);
