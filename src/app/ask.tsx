@@ -12,8 +12,8 @@ import { Result } from "./result";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
-const STEP_MS = 7_000; // each step plays slowly on its own…
-const PAUSE_MS = 1_500; // …then holds briefly before the next one starts
+const STEP_MS = 4_000; // each step plays slowly on its own…
+const PAUSE_MS = 1_000; // …then holds briefly before the next one starts
 const CONNECT = 0.16; // first: search the connected systems
 const SCAN = 0.42; // then scan the documents, then sort them
 // Where each step ends.
@@ -117,23 +117,34 @@ export default function Ask() {
 
   // An example is typed into the chat box first, then sent, as if the user asked it.
   const typing = useRef(false);
+  const [pressing, setPressing] = useState(false);
   function tryExample(ex: Example) {
     if (typing.current || loading) return;
     typing.current = true;
     window.scrollTo({ top: 0, behavior: "smooth" });
     const q = ex.question;
-    const steps = Math.min(q.length, 40);
+    // Fetch while typing, so the next page opens straight away with no loading screen in between.
+    const answer = fetchAnswer(q, ex.context);
+    const steps = Math.min(q.length, 35);
     let i = 0;
     const id = setInterval(() => {
       i++;
       setQuestion(q.slice(0, Math.ceil((q.length * i) / steps)));
       if (i < steps) return;
       clearInterval(id);
-      setTimeout(() => {
-        typing.current = false;
-        ask(q, ex.context);
-      }, 600);
-    }, 25);
+      setTimeout(async () => {
+        setPressing(true);
+        const r = await answer;
+        setTimeout(() => {
+          typing.current = false;
+          setPressing(false);
+          setCtx(ex.context);
+          setAsked(q);
+          setResult(r);
+          setRun((n) => n + 1);
+        }, 150);
+      }, 250);
+    }, 22);
   }
 
   // The voter is the signed-in user: the server reads it from the session cookie.
@@ -188,7 +199,7 @@ export default function Ask() {
 <span className="text-xs text-neutral-400">Mention a client or country if it matters, e.g. “for Bakkerij Janssens”.</span>
               <button
                 disabled={!question.trim()}
-                className="ml-auto rounded-full bg-[#161616] px-5 py-2 font-medium text-white transition hover:bg-black disabled:bg-neutral-200 disabled:text-neutral-400"
+                className={`ml-auto rounded-full bg-[#161616] px-5 py-2 font-medium text-white transition hover:bg-black disabled:bg-neutral-200 disabled:text-neutral-400 ${pressing ? "scale-95 bg-black" : ""}`}
               >
                 Ask
               </button>
