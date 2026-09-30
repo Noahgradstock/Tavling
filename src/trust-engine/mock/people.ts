@@ -7,7 +7,7 @@ export const people: Person[] = [
   { id: "lotte", name: "Lotte Verbeke", role: "expert", team: "Payroll BE" },
   { id: "sofie", name: "Sofie Maes", role: "regular", team: "Payroll BE" },
   { id: "pieter", name: "Pieter Jacobs", role: "regular", team: "Payroll BE" },
-  { id: "koen", name: "Koen Maes", role: "regular", team: "Payroll BE (left 2025)" },
+  { id: "koen", name: "Koen Maes", role: "regular", team: "Payroll BE", left: true },
   { id: "tom", name: "Tom Claes", role: "new", team: "Payroll BE" },
   { id: "lars", name: "Lars de Vries", role: "expert", team: "Payroll NL" },
   { id: "sanne", name: "Sanne de Vries", role: "expert", team: "Legal Payroll NL" },

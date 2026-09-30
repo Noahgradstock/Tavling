@@ -5,6 +5,7 @@ export const POINTS = {
   official: 3.0,
   expertAuthor: 1.0,
   newAuthor: -0.5,
+  ownerLeft: -1.0, // author left the company: nobody maintains this anymore
   // Layer 2 – freshness: when?
   maxAgePenalty: 2.0, // -1 point per topic half-life, capped here
   predatesRuleChange: -2.5,

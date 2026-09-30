@@ -1,22 +1,43 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { customer, sources } from "@/lib/knowledge";
-import { fallbackAnswer } from "@/lib/fallback-answer";
-import { scoreSource } from "@/lib/trust";
+import { customer } from "@/lib/knowledge";
+import { evaluateFact, MOCK_NOW, mockKnowledgeBase as kb, type Claim as EngineClaim, type ScoredClaim } from "@/trust-engine";
 
-// The scroll story replays the brain's reasoning with the cached, verified answer so it never breaks.
-const trust = Object.fromEntries(
-  sources.map((s) => [s.id, scoreSource(s, fallbackAnswer.readings.find((r) => r.id === s.id))]),
-);
-const byId = (id: string) => sources.find((s) => s.id === id)!;
+// The scroll story replays the trust engine on the SD Worx case from the brief:
+// an urgent question, a recent policy, a manual nobody owns, a guide for another country,
+// and a colleague contradicting it all in Teams.
+const CTX = { country: "BE", pc: "200", client: "brouwerij-de-kroon" };
+const result = evaluateFact(kb.facts.find((f) => f.key === "sick-relapse")!, kb, CTX, [], MOCK_NOW);
+const people = Object.fromEntries(kb.people.map((p) => [p.id, p]));
+const claims: EngineClaim[] = kb.claims.filter((c) => c.factKey === "sick-relapse");
+const scored = (id: string) => result.claims.find((c) => c.claim.id === id);
+const excluded = (id: string) => result.excluded.find((e) => e.claim.id === id);
+const pct = (n: number) => Math.round(n * 100);
+const levelOf = (n: number) => (n >= 0.75 ? "trusted" : n >= 0.5 ? "care" : "avoid");
+const CHANNEL = { official: "Official", teams: "Teams", sharepoint: "SharePoint", email: "Email" } as const;
+const who = (c: EngineClaim) => (c.author ? people[c.author]?.name : "Government");
 
-const KEPT = ["policy-2026", "manual-2023", "teams-tom"];
-const DROPPED: Record<string, string> = {
-  "nl-guide": "Other country",
-  "draft-email": "Draft, never published",
-  "faq-solidarity": "Only covers part 2 · kept for later",
+// Each source's role in the brief's "real stories, real friction" example.
+const ROLE: Record<string, string> = {
+  "off-relapse-2026": "Recently updated",
+  "sp-manual-relapse": "Nobody owns it",
+  "sp-nl-relapse": "Other country",
+  "tm-relapse-tom": "Colleague contradicts",
+  "em-relapse-draft": "Never published",
+  "tm-relapse-an": "Expert reminder",
 };
+// The three the brief names, compared side by side.
+const COMPARE = ["off-relapse-2026", "sp-manual-relapse", "tm-relapse-tom"];
+const LAYERS = [
+  { key: "authority", label: "Who said it" },
+  { key: "freshness", label: "How recent" },
+  { key: "corroboration", label: "Who agrees" },
+  { key: "consistency", label: "Matches the law" },
+  { key: "relevance", label: "Applies to this client" },
+];
+const best = result.best!;
+const loser = [scored("sp-manual-relapse")!, scored("tm-relapse-tom")!].sort((a, b) => b.score - a.score)[0];
 
 function useInView<T extends Element>(threshold = 0.35) {
   const ref = useRef<T>(null);
@@ -147,14 +168,14 @@ function Barcode({ count, tone = "dark" }: { count: number; tone?: "dark" | "blu
   );
 }
 
-/* 02 — the brain fans out to every knowledge channel */
+/* 02 — the brain finds every source, each with its own kind of friction */
 function StepSearch() {
   return (
     <Step
       n="02"
       label="Search"
-      title="It searches everywhere knowledge lives"
-      text="Policies, old PDF manuals, Confluence pages in other countries, Teams chats, newsletters and email. Six sources mention the question."
+      title="It finds six sources, and they don't agree"
+      text="A policy updated this year. A manual whose owner has left. A guide written for another country. A draft that was never published. And a colleague in Teams saying the opposite. The information exists. Confidence doesn't."
     >
       {(seen) => (
         <div className="relative rounded-2xl border border-black/5 bg-[#e8e4dc] p-5">
@@ -175,9 +196,9 @@ function StepSearch() {
             ))}
           </svg>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {sources.map((s, i) => (
+            {claims.map((c, i) => (
               <div
-                key={s.id}
+                key={c.id}
                 className="rounded-xl border border-black/5 bg-[#f7f5f1] p-3 transition duration-500"
                 style={{
                   opacity: seen ? 1 : 0,
@@ -185,17 +206,15 @@ function StepSearch() {
                   transitionDelay: `${0.5 + i * 0.12}s`,
                 }}
               >
-                <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-neutral-500">
-                  {s.channel}
-                  <span className="text-[#1463ff]">found</span>
+                <div className="flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+                  {CHANNEL[c.source.type]}
+                  <span className="truncate text-[#1463ff]">{c.value}</span>
                 </div>
                 <div className="relative my-2.5 h-7 overflow-hidden rounded bg-white">
                   <Barcode count={26} />
                 </div>
-                <div className="truncate text-[13px] font-medium">{s.short}</div>
-                <div className="text-[11px] text-neutral-500">
-                  {s.country} · {s.date.slice(0, 7)}
-                </div>
+                <div className="truncate text-[13px] font-medium">{c.source.title}</div>
+                <div className="mt-1 text-[11px] text-neutral-500">{ROLE[c.id]}</div>
               </div>
             ))}
           </div>
@@ -221,41 +240,41 @@ function BrainNode({ active }: { active: boolean }) {
   );
 }
 
-/* 03 — sources that don't apply fall away, three remain for the hard part */
+/* 03 — sources that don't apply to this client fall away */
 function StepNarrow() {
   return (
     <Step
       n="03"
       label="Narrow down"
-      title="Six sources become three"
-      text="A Dutch guide doesn't apply in Belgium. A draft was never published. Three sources remain that disagree on the hard part of the question: the relapse rule."
+      title="What applies to this client?"
+      text={`${customer.company} is in Belgium, joint committee 200. The Dutch guide isn't wrong, it just doesn't apply here, so it's set aside instead of scored down.`}
     >
       {(seen) => (
         <div className="flex flex-col gap-2">
-          {sources.map((s, i) => {
-            const dropped = DROPPED[s.id];
+          {claims.map((c, i) => {
+            const out = excluded(c.id);
             return (
               <div
-                key={s.id}
+                key={c.id}
                 className="flex items-center gap-3 rounded-xl border border-black/5 px-4 py-3 transition-all duration-700"
                 style={{
-                  background: seen && dropped ? "transparent" : "#fff",
-                  opacity: seen && dropped ? 0.45 : 1,
-                  transform: seen && dropped ? "translateX(24px) scale(0.97)" : "none",
+                  background: seen && out ? "transparent" : "#fff",
+                  opacity: seen && out ? 0.45 : 1,
+                  transform: seen && out ? "translateX(24px) scale(0.97)" : "none",
                   transitionDelay: `${0.3 + i * 0.15}s`,
                 }}
               >
                 <span className="w-24 shrink-0 font-mono text-[10px] uppercase tracking-widest text-neutral-500">
-                  {s.channel}
+                  {CHANNEL[c.source.type]}
                 </span>
-                <span className={`flex-1 text-sm ${seen && dropped ? "line-through" : "font-medium"}`}>{s.title}</span>
+                <span className={`flex-1 text-sm ${seen && out ? "line-through" : "font-medium"}`}>{c.source.title}</span>
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] transition-opacity duration-500 ${
-                    dropped ? "bg-neutral-200 text-neutral-600" : "bg-[#e8efff] text-[#1463ff]"
+                    out ? "bg-neutral-200 text-neutral-600" : "bg-[#e8efff] text-[#1463ff]"
                   }`}
                   style={{ opacity: seen ? 1 : 0, transitionDelay: `${0.6 + i * 0.15}s` }}
                 >
-                  {dropped ?? "Answers the relapse rule"}
+                  {out ? "Other country" : "Applies to BE"}
                 </span>
               </div>
             );
@@ -264,7 +283,7 @@ function StepNarrow() {
             className="mt-2 text-center font-serif text-3xl transition-opacity duration-700"
             style={{ opacity: seen ? 1 : 0, transitionDelay: "1.5s" }}
           >
-            6 → 3
+            {claims.length} → {result.claims.length}
           </div>
         </div>
       )}
@@ -272,45 +291,50 @@ function StepNarrow() {
   );
 }
 
-/* 04 — each remaining source is checked against the six trust signals */
+/* 04 — the three sources from the brief, scored layer by layer */
 function StepCheck() {
-  const signals = trust[KEPT[0]].signals.map((s) => s.key);
+  const cols = COMPARE.map((id) => scored(id)!);
+  const layerPoints = (c: ScoredClaim, layer: string) => {
+    const lines = c.evidence.filter((e) => e.layer === layer);
+    return { points: Math.round(lines.reduce((s, e) => s + e.points, 0) * 10) / 10, detail: lines.map((e) => e.label).join(" · ") };
+  };
   return (
     <Step
       n="04"
       label="Check"
-      title="Every source is checked, in the open"
-      text="Right country, consistent with the rest, verified by an expert, recent, owned by someone still here, and final. No black box: each signal adds points you can see."
+      title="Every source is scored, in the open"
+      text="Same rules for every source, no AI guessing: who wrote it, how recent it is, who agrees, whether it matches the law, and whether it applies to this client. Each layer adds or removes points you can see."
     >
       {(seen) => (
         <div className="overflow-hidden rounded-2xl border border-black/5 bg-white">
           <div className="grid grid-cols-[1.2fr_repeat(3,1fr)] border-b border-black/5 bg-[#f7f5f1] text-[12px] font-medium">
-            <div className="p-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Signal</div>
-            {KEPT.map((id) => (
-              <div key={id} className="p-3 text-center">
-                {byId(id).short}
+            <div className="p-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Layer</div>
+            {cols.map((c) => (
+              <div key={c.claim.id} className="p-3 text-center">
+                <div>{CHANNEL[c.claim.source.type]}</div>
+                <div className="text-[11px] font-normal text-neutral-500">{ROLE[c.claim.id]}</div>
               </div>
             ))}
           </div>
-          {signals.map((key, row) => (
-            <div key={key} className="grid grid-cols-[1.2fr_repeat(3,1fr)] border-b border-black/5 text-sm last:border-0">
-              <div className="p-3 capitalize text-neutral-600">{key === "fresh" ? "recent" : key}</div>
-              {KEPT.map((id, col) => {
-                const sig = trust[id].signals.find((s) => s.key === key)!;
+          {LAYERS.map((layer, row) => (
+            <div key={layer.key} className="grid grid-cols-[1.2fr_repeat(3,1fr)] border-b border-black/5 text-sm last:border-0">
+              <div className="p-3 text-neutral-600">{layer.label}</div>
+              {cols.map((c, col) => {
+                const { points, detail } = layerPoints(c, layer.key);
                 return (
-                  <div key={id} className="flex items-center justify-center p-3">
+                  <div key={c.claim.id} className="flex items-center justify-center p-3">
                     <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] transition duration-300 ${
-                        sig.ok ? "bg-[#e8efff] text-[#1463ff]" : "bg-[#ffe9ea] text-[#c62a30]"
+                      className={`rounded-full px-2 py-0.5 text-[12px] font-medium tabular-nums transition duration-300 ${
+                        points > 0 ? "bg-[#e8efff] text-[#1463ff]" : points < 0 ? "bg-[#ffe9ea] text-[#c62a30]" : "text-neutral-300"
                       }`}
                       style={{
                         opacity: seen ? 1 : 0,
                         transform: seen ? "scale(1)" : "scale(0.4)",
                         transitionDelay: `${0.4 + row * 0.25 + col * 0.08}s`,
                       }}
-                      title={sig.detail}
+                      title={detail}
                     >
-                      {sig.ok ? "✓" : "✕"}
+                      {points > 0 ? `+${points}` : points < 0 ? points : "–"}
                     </span>
                   </div>
                 );
@@ -319,9 +343,9 @@ function StepCheck() {
           ))}
           <div className="grid grid-cols-[1.2fr_repeat(3,1fr)] bg-[#f7f5f1]">
             <div className="p-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Trust</div>
-            {KEPT.map((id) => (
-              <div key={id} className="flex items-center justify-center p-3">
-                <CountUp to={trust[id].score} run={seen} delay={2000} level={trust[id].level} />
+            {cols.map((c) => (
+              <div key={c.claim.id} className="flex items-center justify-center p-3">
+                <CountUp to={pct(c.score)} run={seen} delay={2000} level={levelOf(c.score)} />
               </div>
             ))}
           </div>
@@ -354,33 +378,26 @@ function CountUp({ to, run, delay, level }: { to: number; run: boolean; delay: n
   );
 }
 
-/* 05 — the conflict is resolved and the answer shows why it can be trusted */
+/* 05 — one answer, the reason, and who to ask */
 function StepVerdict() {
-  const answer = fallbackAnswer;
+  const expert = people["an"];
   return (
     <Step
       n="05"
       label="Verdict"
-      title="The conflict, resolved"
-      text="The verified 2026 policy outranks an ownerless 2023 manual and a Teams message. The consultant sees the answer, the reason and who to ask."
+      title="From “I found something” to “I can rely on it”"
+      text="The 2026 law, confirmed by the policy owner, outranks a manual nobody maintains and a Teams message from a new colleague. The consultant sees one answer, why it holds, and who to ask."
     >
       {(seen) => (
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-3">
-            <Claim
-              seen={seen}
-              delay={0.2}
-              value="8 weeks"
-              who="BE policy 2026"
-              score={trust["policy-2026"].score}
-              win
-            />
+            <Claim seen={seen} delay={0.2} value={best.claim.value} who={`${best.claim.source.title}`} score={pct(best.score)} win />
             <Claim
               seen={seen}
               delay={0.4}
-              value="14 days"
-              who="Manual v4 · Teams message"
-              score={Math.max(trust["manual-2023"].score, trust["teams-tom"].score)}
+              value={loser.claim.value}
+              who={`${CHANNEL[loser.claim.source.type]} · ${who(loser.claim)}`}
+              score={pct(loser.score)}
             />
           </div>
           <div
@@ -388,11 +405,15 @@ function StepVerdict() {
             style={{ opacity: seen ? 1 : 0, transform: seen ? "none" : "translateY(16px)", transitionDelay: "1.2s" }}
           >
             <div className="font-mono text-[10px] uppercase tracking-widest text-white/50">Answer to the customer</div>
-            <p className="mt-2 font-serif text-2xl leading-snug">{answer.headline}</p>
+            <p className="mt-2 font-serif text-2xl leading-snug">
+              No new guaranteed salary. The employee fell ill again within {best.claim.value}, so it counts as the same illness.
+            </p>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-white/70">
-              <span className="rounded-full bg-white/10 px-2.5 py-1">Source: BE policy 2026 · 95</span>
-              <span className="rounded-full bg-white/10 px-2.5 py-1">Confirm with {answer.askExpert}</span>
-              <span className="rounded-full bg-[#e5484d]/20 px-2.5 py-1 text-[#ff9a9d]">Manual v4 flagged as outdated</span>
+              <span className="rounded-full bg-white/10 px-2.5 py-1">
+                {best.claim.source.title} · {pct(best.score)}
+              </span>
+              <span className="rounded-full bg-white/10 px-2.5 py-1">Confirm with {expert.name}</span>
+              <span className="rounded-full bg-[#e5484d]/20 px-2.5 py-1 text-[#ff9a9d]">Manual v4 flagged: owner left, old rule</span>
             </div>
           </div>
         </div>
@@ -427,7 +448,7 @@ function Claim({
         transitionDelay: `${delay + (win ? 0.6 : 0.8)}s`,
       }}
     >
-      <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Relapse period</div>
+      <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">{result.fact.label}</div>
       <div className={`mt-1 font-serif text-4xl ${win ? "" : "line-through decoration-[#e5484d] decoration-2"}`}>
         {value}
       </div>

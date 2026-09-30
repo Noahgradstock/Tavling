@@ -19,6 +19,7 @@ const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
 const round = (n: number) => Math.round(n * 100) / 100;
 const clamp = (n: number, max: number) => Math.max(-max, Math.min(max, n));
 const specificity: Record<Relevance, number> = { client: 2, sector: 1, country: 0 };
+const RELEVANCE_TAG: Record<Relevance, string> = { client: "Client-specific", sector: "Same sector", country: "Same country" };
 
 export const sameValue = (a: string, b: string) =>
   a.toLowerCase().replace(/\s+/g, "").replace(",", ".") === b.toLowerCase().replace(/\s+/g, "").replace(",", ".");
@@ -48,52 +49,53 @@ function scoreClaim(
 ): ScoredClaim {
   const evidence: Evidence[] = [];
   const caps: { label: string; max: number }[] = [];
-  const add = (layer: string, label: string, points: number) => evidence.push({ layer, label, points });
+  const add = (layer: string, tag: string, label: string, points: number) => evidence.push({ layer, tag, label, points });
   const author = claim.author ? people.get(claim.author) : undefined;
   const isOfficial = claim.source.type === "official";
 
   // Layer 1 – authority
-  if (isOfficial) add("authority", "Official publication", POINTS.official);
-  else if (author?.role === "expert") add("authority", `${author.name} is a topic expert`, POINTS.expertAuthor);
-  else if (author?.role === "new") add("authority", `${author.name} is new, no track record`, POINTS.newAuthor);
+  if (isOfficial) add("authority", "Official", "Official publication", POINTS.official);
+  else if (author?.role === "expert") add("authority", "Expert", `${author.name} is a topic expert`, POINTS.expertAuthor);
+  else if (author?.role === "new") add("authority", "New hire", `${author.name} is new, no track record`, POINTS.newAuthor);
+  if (author?.left) add("authority", "No owner", `${author.name} has left, nobody owns this anymore`, POINTS.ownerLeft);
 
   // Layer 2 – freshness. Official rules stay valid until replaced, so they do not age.
   if (!isOfficial) {
     const ageDays = (now.getTime() - Date.parse(claim.date)) / DAY;
     const halfLife = HALF_LIFE_DAYS[fact.topic] ?? DEFAULT_HALF_LIFE_DAYS;
     const penalty = -Math.min(POINTS.maxAgePenalty, ageDays / halfLife);
-    if (penalty < -0.05) add("freshness", `Written ${Math.round(ageDays / 30)} months ago`, penalty);
+    if (penalty < -0.05) add("freshness", `${Math.round(ageDays / 30)} months old`, `Written ${Math.round(ageDays / 30)} months ago`, penalty);
   }
   const refStart = ref ? Date.parse(ref.effectiveFrom ?? ref.date) : null;
   const claimStart = Date.parse(claim.effectiveFrom ?? claim.date);
   const matchesRef = ref ? sameValue(claim.value, ref.value) : false;
   if (ref && claim.id !== ref.id && refStart !== null && claimStart < refStart && !matchesRef) {
-    add("freshness", `Written before the rule change of ${ref.effectiveFrom}`, POINTS.predatesRuleChange);
+    add("freshness", "Old rule", `Written before the rule change of ${ref.effectiveFrom}`, POINTS.predatesRuleChange);
     caps.push({ label: "predates the current rule", max: CAPS.predatesRuleChange });
   }
 
   // Layer 3 – corroboration
   const expertThumbs = (claim.reactions ?? []).filter((id) => id !== claim.author && people.get(id)?.role === "expert");
   const thumbs = Math.min(expertThumbs.length, POINTS.maxExpertReactions);
-  if (thumbs) add("corroboration", `👍 from ${thumbs} expert${thumbs > 1 ? "s" : ""}`, thumbs * POINTS.expertReaction);
+  if (thumbs) add("corroboration", `${thumbs}× expert 👍`, `👍 from ${thumbs} expert${thumbs > 1 ? "s" : ""}`, thumbs * POINTS.expertReaction);
   const agreeing = isOfficial ? 0 : new Set(
     siblings
       .filter((c) => c.id !== claim.id && c.source.type !== "official" && c.author !== claim.author && sameValue(c.value, claim.value))
       .map((c) => c.author),
   ).size;
   const agreements = Math.min(agreeing, POINTS.maxAgreements);
-  if (agreements) add("corroboration", `${agreements} other colleague${agreements > 1 ? "s" : ""} said the same`, agreements * POINTS.agreement);
+  if (agreements) add("corroboration", "Others agree", `${agreements} other colleague${agreements > 1 ? "s" : ""} said the same`, agreements * POINTS.agreement);
   const corrections = siblings.filter((c) => c.corrects === claim.id && !sameValue(c.value, claim.value));
   for (const c of corrections) {
     const who = c.author ? people.get(c.author)?.name : undefined;
-    add("corroboration", `Corrected by ${who ?? "a colleague"}`, POINTS.corrected);
+    add("corroboration", "Corrected", `Corrected by ${who ?? "a colleague"}`, POINTS.corrected);
   }
 
   // Layer 4 – consistency with the official source
   if (ref && !isOfficial) {
-    if (matchesRef) add("consistency", `Matches ${ref.source.title}`, POINTS.matchesOfficial);
+    if (matchesRef) add("consistency", "Matches law", `Matches ${ref.source.title}`, POINTS.matchesOfficial);
     else {
-      add("consistency", `Contradicts ${ref.source.title} (${ref.value})`, POINTS.contradictsOfficial);
+      add("consistency", "Contradicts law", `Contradicts ${ref.source.title} (${ref.value})`, POINTS.contradictsOfficial);
       caps.push({ label: "contradicts the official source", max: CAPS.contradictsOfficial });
     }
   }
@@ -102,7 +104,7 @@ function scoreClaim(
   }
 
   // Layer 5 – relevance to the asker's case
-  add("relevance", `Applies at ${relevance} level`, POINTS.relevance[relevance]);
+  add("relevance", RELEVANCE_TAG[relevance], `Applies at ${relevance} level`, POINTS.relevance[relevance]);
 
   // Layer 6 – usage feedback, weighted by who gives it
   const votes = feedback.filter((f) => f.claimId === claim.id && f.kind !== "not_applicable");
@@ -114,10 +116,10 @@ function scoreClaim(
     const summary = `${votes.filter((f) => f.kind === "correct").length} said correct, ${votes.filter((f) => f.kind === "wrong").length} wrong, ${outdated} outdated`;
     if (isOfficial && (wrong > 0 || outdated > 0)) {
       // Users cannot vote down the law. Negative votes flag it for a human check instead.
-      add("feedback", `${summary}: flagged for expert review`, 0);
+      add("feedback", "Flagged", `${summary}: flagged for expert review`, 0);
     } else {
       const points = clamp(Math.log(1 + correct) - Math.log(1 + wrong) + outdated * POINTS.outdatedVote, POINTS.feedbackCap);
-      add("feedback", `Consultant feedback: ${summary}`, points);
+      add("feedback", points >= 0 ? "Users confirm" : "Users disagree", `Consultant feedback: ${summary}`, points);
     }
   }
 

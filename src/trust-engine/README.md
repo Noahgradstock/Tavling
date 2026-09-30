@@ -9,7 +9,7 @@ Every claim (one statement from one source) starts at 50%. Six layers add or sub
 
 | Layer | Question | Examples |
 |---|---|---|
-| 1 Authority | Who said it? | Official +3, expert +1, new hire −0.5 |
+| 1 Authority | Who said it? | Official +3, expert +1, new hire −0.5, author has left (no owner) −1 |
 | 2 Freshness | When? | −1 per topic half-life (max −2), written before the rule change −2.5 |
 | 3 Corroboration | Who agrees? | Expert 👍 +0.5, colleague says the same +0.7, corrected in a reply −1.5 |
 | 4 Consistency | Does it match the official source? | Match +2, contradicts −3 |
@@ -49,7 +49,8 @@ HTTP (Next.js routes in `src/app/api/trust/`):
 - `POST /api/trust/feedback` `{ claimId, kind, context }`, header `x-demo-user` (**demo only, replace with real auth**)
 - `GET /api/trust/meta`: people, clients, facts
 
-Try it at <http://localhost:3000/chat>. Run the tests with `npm test`.
+The home page (`src/app/brain.tsx`) asks through `/api/trust/ask` and the scroll story (`src/app/story.tsx`) replays
+the engine on the SD Worx case from the brief. Run the tests with `npm test`.
 
 ## Not done yet
 

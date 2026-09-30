@@ -1,9 +1,15 @@
 import { evaluateFact, sameValue } from "./score";
-import type { Context, Fact, FactResult, Feedback, KnowledgeBase } from "./types";
+import type { Context, Fact, FactResult, Feedback, KnowledgeBase, Person } from "./types";
 
 export type AskResult =
   | { matched: false; message: string; suggestions: string[] }
-  | ({ matched: true; answer: string; warnings: string[] } & FactResult);
+  | ({
+      matched: true;
+      answer: string;
+      warnings: string[];
+      people: Record<string, Person>; // authors of the claims in this result
+      expert: Person | null; // who to ask to confirm
+    } & FactResult);
 
 // Simple keyword matching picks the fact. Swap this for an LLM or embeddings later;
 // the scoring below stays the same.
@@ -23,6 +29,9 @@ export function ask(question: string, ctx: Context, kb: KnowledgeBase, feedback:
 
   const result = evaluateFact(fact, kb, ctx, feedback, now);
   const { best, status } = result;
+  const people = Object.fromEntries(
+    kb.people.filter((p) => [...result.claims, ...result.excluded].some((c) => c.claim.author === p.id)).map((p) => [p.id, p]),
+  );
   const answer = !best
     ? `Nothing in the brain applies to your case (${describe(ctx)}).`
     : status === "conflict"
@@ -33,7 +42,12 @@ export function ask(question: string, ctx: Context, kb: KnowledgeBase, feedback:
     .filter((c) => best && !sameValue(c.claim.value, best.claim.value))
     .map((c) => `${c.claim.source.title}${by(c.claim.author, kb)} says ${c.claim.value}, only ${pct(c.score)} trusted${c.caps[0] ? `: ${c.caps[0].split(": ")[1]}` : ""}`);
 
-  return { matched: true, answer, warnings, ...result };
+  // Prefer an expert who backs the best answer, then any expert who spoke on the topic.
+  const experts = result.claims.map((c) => (c.claim.author ? people[c.claim.author] : undefined)).filter((p) => p?.role === "expert");
+  const backing = result.claims.find((c) => best && sameValue(c.claim.value, best.claim.value) && c.claim.author && people[c.claim.author]?.role === "expert");
+  const expert = (backing?.claim.author ? people[backing.claim.author] : experts[0]) ?? null;
+
+  return { matched: true, answer, warnings, people, expert, ...result };
 }
 
 const by = (id: string | null, kb: KnowledgeBase) => {

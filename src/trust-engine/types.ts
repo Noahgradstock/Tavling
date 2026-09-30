@@ -10,7 +10,7 @@ export type Scope = { country: string; pc?: string; client?: string };
 // Who is asking: the consultant's current case.
 export type Context = { country: string; pc?: string; client?: string };
 
-export type Person = { id: string; name: string; role: Role; team: string };
+export type Person = { id: string; name: string; role: Role; team: string; left?: boolean }; // left = no longer at the company
 
 export type Client = { id: string; name: string; country: string; pc?: string };
 
@@ -42,7 +42,8 @@ export type KnowledgeBase = { facts: Fact[]; claims: Claim[]; people: Person[]; 
 
 export type Relevance = "client" | "sector" | "country";
 
-export type Evidence = { layer: string; label: string; points: number };
+// tag = 1-3 words for tight spaces (graph leaves, chips); label = the full sentence.
+export type Evidence = { layer: string; tag: string; label: string; points: number };
 
 export type ScoredClaim = {
   claim: Claim;
