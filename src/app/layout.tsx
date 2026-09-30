@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Caveat, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,6 +18,11 @@ const serif = Instrument_Serif({
   weight: "400",
 });
 
+const signature = Caveat({
+  variable: "--font-signature",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Company brain – trusted answers",
   description: "Answers customer questions and shows why each source can or cannot be trusted.",
@@ -27,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${serif.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${serif.variable} ${signature.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
