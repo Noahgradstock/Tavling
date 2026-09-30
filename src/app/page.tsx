@@ -1,11 +1,11 @@
 import Brain from "./brain";
-import Story from "./story";
+import Demo from "./demo";
 
 export default function Home() {
   return (
     <>
+      <Demo />
       <Brain />
-      <Story />
     </>
   );
 }
