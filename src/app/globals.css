@@ -36,3 +36,41 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .barcode-bar { animation: none; }
 }
+
+/* Company brain map */
+.brain-stage {
+  background:
+    radial-gradient(ellipse at 60% 45%, #1b2463 0%, transparent 60%),
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0) 0 0 / 22px 22px,
+    #070b22;
+  box-shadow: 0 30px 80px -30px rgba(20, 30, 90, 0.55);
+}
+.brain-node:focus-visible circle:nth-of-type(2) {
+  stroke: #fff;
+  stroke-width: 2.5;
+}
+/* The core breathes: two rings drift outward and fade. */
+.brain-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: brain-pulse 3.2s ease-out infinite;
+}
+.brain-pulse-late {
+  animation-delay: 1.6s;
+}
+@keyframes brain-pulse {
+  from { transform: scale(1); opacity: 0.6; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+.brain-synapse {
+  stroke-dasharray: 700;
+  animation: synapse 600ms ease-out both;
+}
+@keyframes synapse {
+  from { stroke-dashoffset: 700; }
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brain-pulse, .brain-synapse { animation: none; }
+  .brain-pulse, .brain-particle { display: none; }
+}
