@@ -2,6 +2,9 @@
 
 Team Aleida.ai · Tectonic Hackathon 2026 · SD Worx challenge "Unlock the Knowledge Within"
 
+- **Live demo:** https://tavling-eight.vercel.app
+- **Repository:** https://github.com/Noahgradstock/Tavling
+
 A payroll consultant gets an urgent customer question. The answer exists, but it is spread across a policy, an old manual, a Dutch guide, a Teams thread, a newsletter and a draft email, and they disagree. This proof of concept answers the question **and shows why each source can or cannot be trusted**, so the consultant goes from "I found something" to "I understand why I can rely on it".
 
 ## What it does
@@ -26,15 +29,26 @@ npm test         # trust engine tests
 
 Optional: put `GEMINI_API_KEY=...` in `.env.local` for free-text questions. Without a key the app falls back to keyword matching and still works end to end.
 
+## Deploy
+
+The live demo runs on Vercel (project `tavling`). Pushing to GitHub does not deploy automatically yet; from the repo folder run:
+
+```bash
+vercel deploy --prod
+```
+
+`GEMINI_API_KEY` is set as an encrypted environment variable in the Vercel project.
+
 ## Structure
 
 - `src/app/`: the demo page (ask → search → trust funnel → answer) and API routes under `api/trust/`
 - `src/trust-engine/`: scoring engine, weights in `config.ts`, tests
 - `src/lib/gemini-match.ts`: Gemini question routing
-- `data/salary/`: fictional source files (policies, Teams exports, emails) used as test data
+- `data/salary/`: fictional source files (policies, Teams exports, emails). The trust engine reads its knowledge from here at runtime (`src/trust-engine/data.ts`): claims from `sources.json`, quotes from the files themselves. The test questions in `sources.json` run as part of `npm test`
 
 ## Unfinished
 
-- Claims are hand-written mock data. Extracting claims from real documents and Teams exports with an LLM is not built yet.
-- No real login: the demo user is fixed, and feedback is stored in memory and resets on restart.
+- Claims are listed by hand in `data/salary/sources.json` (the quotes are read from the files). Extracting claims from new documents automatically with an LLM is not built yet.
+- Sick leave, overtime and flexi-jobs have no data files yet and use mock claims from `src/trust-engine/mock/`.
+- No real login: the demo user is fixed, and feedback is stored in memory. It resets on restart and is not shared between server instances on Vercel.
 - All people, clients, legal references and amounts are fictional.
