@@ -11,9 +11,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  // The trust API reads its knowledge from these files at runtime.
+  // The trust API and the brain map read their knowledge from these files at runtime.
   outputFileTracingIncludes: {
     "/api/trust/*": ["./data/salary/**/*"],
+    "/brain": ["./data/salary/**/*"],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

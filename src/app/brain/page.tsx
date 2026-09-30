@@ -4,6 +4,7 @@ import path from "node:path";
 import { evaluateFact } from "@/trust-engine";
 import { feedbackStore, kb, now } from "@/lib/trust-server";
 import { requireUser } from "@/lib/session";
+import { DOC_FOLDERS, loadDocuments } from "@/lib/documents";
 import BrainMap, { type BrainData } from "./brain-map";
 
 export const metadata: Metadata = {
@@ -76,6 +77,9 @@ export default async function BrainPage() {
       claims: kb.claims.filter((c) => c.source.type === type).length,
     })),
     files: listFiles(path.join(process.cwd(), "data", "salary")),
+    documents: loadDocuments(kb),
+    folders: DOC_FOLDERS,
+    scores: Object.fromEntries(topics.flatMap((t) => t.claims.map((c) => [c.id, { score: c.score, excluded: c.excluded }]))),
   };
 
   return <BrainMap data={data} />;
