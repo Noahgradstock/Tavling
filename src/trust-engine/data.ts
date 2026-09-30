@@ -36,7 +36,13 @@ const SICK_LEAVE_FILES: Record<string, string> = {
 
 const read = (file: string) => {
   try {
-    return readFileSync(path.join(ROOT, file), "utf8");
+    const baseFull = path.resolve(ROOT);
+    const target = path.join(baseFull, file);
+    const rel = path.relative(baseFull, target);
+    if (rel === ".." || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
+      return "";
+    }
+    return readFileSync(target, "utf8");
   } catch {
     return "";
   }
