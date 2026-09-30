@@ -1,11 +1,10 @@
-import Brain from "./brain";
 import Demo from "./demo";
 
 export default function Home() {
   return (
     <>
       <Demo />
-      <Brain />
+      <div className="h-[30vh]" />
     </>
   );
 }
