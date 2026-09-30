@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 type User = { id: string; name: string; role: string; team: string };
 
 // Who is signed in; feedback is recorded under this user.
 export default function UserBar() {
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -18,7 +16,8 @@ export default function UserBar() {
 
   async function signOut() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
+    // Full page load so no cached signed-in page stays reachable after logout.
+    window.location.replace("/login");
   }
 
   if (!user) return null;

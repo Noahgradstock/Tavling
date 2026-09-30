@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
+// A full page load, not router.replace(): the router cached "/" as a redirect to /login from before
+// the session existed, so a client-side navigation would land back on this page until a manual refresh.
+const fullReload = (to: string) => window.location.replace(to);
 
 export default function Login() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export default function Login() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      if (res.ok) return router.replace("/");
+      if (res.ok) return fullReload("/");
       setError(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Sign in failed");
     } finally {
       setBusy(false);
@@ -32,7 +34,7 @@ export default function Login() {
     setError(null);
     try {
       const res = await fetch("/api/auth/guest", { method: "POST" });
-      if (res.ok) return router.replace("/");
+      if (res.ok) return fullReload("/");
       setError(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Guest access failed");
     } finally {
       setBusy(false);

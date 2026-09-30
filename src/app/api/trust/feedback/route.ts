@@ -1,13 +1,14 @@
 import { matchScope, parseFeedback } from "@/trust-engine";
 import { allFeedback, currentUser, forbidden, kb, notYourClient, now, readJson, saveFeedback, tooManyRequests, unauthorized } from "@/lib/trust-server";
 import { rateLimit, sameOrigin } from "@/lib/auth";
-import { canUseContext } from "@/lib/access";
+import { canUseContext, canVote } from "@/lib/access";
 
 // POST { claimId, kind: correct|wrong|outdated|not_applicable, context } — the voter is the signed-in user, never the body.
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return forbidden();
   const user = await currentUser(request);
   if (!user) return unauthorized();
+  if (!canVote(user)) return Response.json({ error: "Sign in with your own account to give feedback" }, { status: 403 });
   if (!(await rateLimit(`vote:${user.id}`, 60, 60_000))) return tooManyRequests();
   const parsed = parseFeedback(await readJson(request), user.id, kb, now());
   if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });

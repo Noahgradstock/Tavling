@@ -1,4 +1,5 @@
 import type { Claim, Client, Context, KnowledgeBase, Person } from "@/trust-engine";
+import { GUEST_ID } from "@/lib/auth";
 
 // Which clients a consultant may work on. In production this comes from SD Worx's client portfolio system;
 // here it is a fixed demo portfolio. Experts see every client in their country, others only their own portfolio.
@@ -10,13 +11,19 @@ const PORTFOLIO: Record<string, string[]> = {
 };
 
 // Countries come from the team name, e.g. "Payroll BE" or "Legal Payroll NL".
-export const countriesOf = (user: Person): string[] => user.team.match(/\b[A-Z]{2}\b/g) ?? [];
+// The demo guest is a visitor: read-only, but it may look at every (fictional) demo client and country.
+export const countriesOf = (user: Person): string[] =>
+  user.id === GUEST_ID ? ["BE", "NL"] : (user.team.match(/\b[A-Z]{2}\b/g) ?? []);
 
 export function clientsOf(user: Person, kb: KnowledgeBase): Client[] {
+  if (user.id === GUEST_ID) return kb.clients;
   const countries = countriesOf(user);
   const own = new Set(PORTFOLIO[user.id] ?? []);
   return kb.clients.filter((c) => countries.includes(c.country) && (user.role === "expert" || own.has(c.id)));
 }
+
+// Only signed-in consultants can vote: votes change the trust scores everyone sees.
+export const canVote = (user: Person) => user.id !== GUEST_ID;
 
 // A case (client, or country + sector) the user may ask about or vote in.
 export function canUseContext(user: Person, ctx: Context, kb: KnowledgeBase): boolean {

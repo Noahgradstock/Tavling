@@ -48,7 +48,6 @@ export default function Ask() {
   const [asked, setAsked] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
   const [examples, setExamples] = useState<Example[]>([]);
-  const [countries, setCountries] = useState<string[]>([]);
   const [ctx, setCtx] = useState<Ctx>({ client: "brouwerij-de-kroon" });
   const [result, setResult] = useState<AskResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,7 +60,6 @@ export default function Ask() {
       .then((m) => {
         setClients(m.clients);
         setExamples(m.examples);
-        setCountries(m.countries ?? []);
         // Start on a client this user works on.
         setCtx((c) =>
           c.client && !m.clients.some((x: Client) => x.id === c.client)
@@ -85,6 +83,11 @@ export default function Ask() {
       body: JSON.stringify({ question: q, context: c }),
     });
     if (res.status === 401) router.replace("/login");
+    // No access to that client or country (403), or too many questions (429): show the reason instead of an answer.
+    if (!res.ok) {
+      const err = (await res.json().catch(() => null)) as { error?: string } | null;
+      return { matched: false, message: err?.error ?? "Something went wrong, try again.", suggestions: [] } as AskResult;
+    }
     return (await res.json()) as AskResult;
   }
 

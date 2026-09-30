@@ -69,17 +69,20 @@ It prints a password per user and two lines, `SESSION_SECRET` and `AUTH_USERS`. 
 
 Optional: put `GEMINI_API_KEY=...` in `.env.local` for free-text questions. Without a key the app falls back to keyword matching and still works end to end.
 
-The live demo runs on Vercel (project `tavling`). Pushing to GitHub does not deploy automatically yet; run `vercel deploy --prod` from the repo folder. Environment variables (encrypted in the Vercel project): `SESSION_SECRET` and `AUTH_USERS` are required, otherwise every page redirects to a login that cannot succeed; `GEMINI_API_KEY` is optional.
+The live demo runs on Vercel (project `tavling`). Pushing to GitHub does not deploy automatically yet; run `vercel deploy --prod` from the repo folder. Environment variables (encrypted in the Vercel project): `SESSION_SECRET` and `AUTH_USERS` are required, otherwise every page redirects to a login that cannot succeed. Recommended: add Upstash Redis from the Vercel Marketplace, which sets `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Optional: `GEMINI_API_KEY`, and `GUEST_ACCESS=off` to disable guest access.
 
 ## Security
 
 Built for the checks of the Aikido AI Code Audit: authentication, authorization, IDOR and business logic.
 
-- **Login:** every page and API route needs a session (`src/proxy.ts`), and each route handler and data page checks it again (`currentUser()` in `src/lib/trust-server.ts`, `requireUser()` in `src/lib/session.ts`).
-- **Sessions:** signed cookie (HMAC-SHA256), `HttpOnly`, `SameSite=Strict`, `Secure` in production, valid for 8 hours (`src/lib/auth.ts`).
+- **Login:** every page and API route needs a session, except the login page and "Continue as guest" (`src/proxy.ts`), and each route handler and data page checks it again (`currentUser()` in `src/lib/trust-server.ts`, `requireUser()` in `src/lib/session.ts`).
+- **Sessions:** signed cookie (HMAC-SHA256), `HttpOnly`, `SameSite=Strict`, `Secure` in production, valid for 8 hours (`src/lib/auth.ts`). Logout revokes the session on the server, so a copied cookie stops working too. Changing a user's password ends all of their sessions.
 - **Passwords:** scrypt hashes only, constant-time comparison. 5 failed attempts block that account from that IP for 15 minutes (so nobody can lock a colleague out), 50 per IP overall.
 - **Voting:** the voter is always the signed-in user from the session, never a value sent by the browser. One vote per user per claim, and only for a case the source actually applies to, so nobody can hide a source for another country, sector or client. Users who left the company cannot sign in.
 - **Abuse limits:** 30 questions and 60 votes per user per minute; request bodies over 10 KB are refused.
+- **Client access:** consultants only see their own client portfolio, experts every client in their own country (`src/lib/access.ts`). Checked in every route: asking, voting, opening a document and the brain map. Another client's agreements and emails are never sent to the browser.
+- **Guest:** "Continue as guest" gives a read-only demo session. Guests can ask but not vote, and it can be switched off with `GUEST_ACCESS=off`.
+- **Shared state:** revoked sessions, rate limits and votes live in Upstash Redis when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set (Vercel Marketplace, free tier), so every server instance sees the same state (`src/lib/store.ts`). Without them they are kept in memory.
 - **CSRF:** POST routes refuse requests from another origin.
 - **AI privacy:** names, clients, ages and identifiers are masked before a question is sent to Gemini (`src/lib/privacy.ts`), and Gemini never sees the sources or scores anything.
 - **Headers:** `X-Frame-Options`, `Content-Security-Policy: frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS (`next.config.ts`).
@@ -101,6 +104,6 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 - Claims are listed by hand in `data/salary/sources.json` (the quotes are read from the files). Extracting claims from new documents automatically with an LLM is not built yet.
 - Overtime and flexi-jobs have no data files yet and use mock claims from `src/trust-engine/mock/`. Sick leave has source files in `data/salary/sick-leave/` but its claims are not in `data/salary/sources.json` yet, so it still uses the mock claims.
 - Login uses demo accounts from an environment variable. In production this would be single sign-on with Microsoft Entra ID, which also gives each user's real role and team.
-- Feedback is stored in memory. It resets on restart and is not shared between server instances on Vercel.
-- The login rate limit is also in memory, per server instance.
+- Without Upstash Redis configured, votes, rate limits and logouts are kept in memory: they reset on restart and are not shared between server instances.
+- The client portfolio per consultant is a fixed demo list in `src/lib/access.ts`; in production it would come from SD Worx's portfolio system.
 - All people, clients, legal references and amounts are fictional.

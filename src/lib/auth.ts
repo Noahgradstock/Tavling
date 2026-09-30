@@ -33,8 +33,14 @@ const safeEqual = (a: string, b: string) => {
   return x.length === y.length && timingSafeEqual(x, y);
 };
 
+// The shared demo guest ("Continue as guest"): no password, read-only. Switch off with GUEST_ACCESS=off.
+export const GUEST_ID = "guest";
+export const guestEnabled = () => process.env.GUEST_ACCESS !== "off";
+
 // Password version: changes when the user's password (salt) changes, which ends all their sessions.
-const passwordVersion = (userId: string) => users().get(userId)?.salt.slice(0, 8) ?? null;
+// Guest sessions all end when guest access is switched off.
+const passwordVersion = (userId: string) =>
+  userId === GUEST_ID ? (guestEnabled() ? "guest" : null) : (users().get(userId)?.salt.slice(0, 8) ?? null);
 
 export function createSession(userId: string, now = Date.now()): string {
   const key = secret();
