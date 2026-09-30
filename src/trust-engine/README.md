@@ -46,7 +46,7 @@ HTTP (Next.js routes in `src/app/api/trust/`):
 
 - `POST /api/trust/ask` `{ question, context: { country, pc } | { client } }`
 - `GET /api/trust/facts?country=BE&pc=200`: every fact with status, for the brain map
-- `POST /api/trust/feedback` `{ claimId, kind, context }`, header `x-demo-user` (**demo only, replace with real auth**)
+- `POST /api/trust/feedback` `{ claimId, kind, context }`, as the signed-in user (session cookie, see `src/lib/auth.ts`)
 - `GET /api/trust/meta`: people, clients, facts
 
 The home page (`src/app/brain.tsx`) asks through `/api/trust/ask` and the scroll story (`src/app/story.tsx`) replays
@@ -61,6 +61,5 @@ The response says which one was used in `matchedBy`.
 ## Not done yet
 
 - Layer 0: LLM extraction of claims from real Teams exports and documents (claims are hand-written mock data)
-- Real login: the `x-demo-user` header is spoofable
 - Persistent feedback: the in-memory store resets on restart
 - Author track record computed from history instead of a fixed role
