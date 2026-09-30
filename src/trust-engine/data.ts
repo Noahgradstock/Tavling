@@ -64,7 +64,8 @@ function teamsQuote(fileText: string, author: string | undefined, date: string, 
 function quote(fileText: string, value: string): string | null {
   const norm = (s: string) => s.toLowerCase().replace(/,/g, ".").replace(/\s+/g, " ");
   // Whole token only: "12" must not match "PC 124", "8" must not match "1978".
-  const esc = norm(value.split(" ")[0]).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Currency is dropped: files write "8,91 EUR" or "EUR 6.91" where the claim says "€8.91".
+  const esc = norm(value.split(" ")[0]).replace(/^€/, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const needle = new RegExp(`(^|[^\\p{L}\\p{N}])${esc}(?![\\p{L}\\p{N}]|[.,]\\p{N})`, "u");
   const sentences = fileText
     .replace(/<[^>]+>/g, " ")

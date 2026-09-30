@@ -23,11 +23,11 @@ export const clients: Client[] = [
 ];
 
 export const facts: Fact[] = [
-  { key: "indexation-2026", label: "Wage indexation January 2026", topic: "indexation", keywords: ["index", "indexering", "indexatie"] },
-  { key: "sick-relapse", label: "Relapse period for guaranteed salary", topic: "sick-leave", keywords: ["relapse", "sick", "guaranteed salary", "illness", "ziek"] },
-  { key: "meal-voucher-max", label: "Max employer part of a meal voucher", topic: "meal-vouchers", keywords: ["meal voucher", "meal-voucher", "maaltijdcheque", "meal"] },
-  { key: "overtime-recovery", label: "Deadline to take overtime recovery rest", topic: "working-time", keywords: ["overtime", "overuren", "recovery", "inhaalrust"] },
-  { key: "holiday-pay", label: "Holiday pay", topic: "holiday-pay", keywords: ["holiday pay", "holiday allowance", "vakantiegeld", "vacation pay", "double holiday"] },
-  { key: "end-of-year-bonus", label: "End-of-year bonus payment month", topic: "bonus", keywords: ["end-of-year", "end of year", "13th month", "year-end", "eindejaarspremie", "bonus"] },
+  { key: "indexation-2026", label: "Wage indexation January 2026", topic: "indexation", keywords: ["index", "indexering", "indexatie", "geïndexeerd", "wage increase", "salary increase", "indexation"] },
+  { key: "sick-relapse", label: "Relapse period for guaranteed salary", topic: "sick-leave", keywords: ["relapse", "sick", "guaranteed salary", "illness", "ziek", "rechute", "salaire garanti", "gewaarborgd loon", "sick again"] },
+  { key: "meal-voucher-max", label: "Max employer part of a meal voucher", topic: "meal-vouchers", keywords: ["meal voucher", "meal-voucher", "maaltijdcheque", "meal", "chèque-repas", "chèques-repas", "maaltijdcheques"] },
+  { key: "overtime-recovery", label: "Deadline to take overtime recovery rest", topic: "working-time", keywords: ["overtime", "overuren", "recovery", "inhaalrust", "repos compensatoire", "recovery rest"] },
+  { key: "holiday-pay", label: "Holiday pay", topic: "holiday-pay", keywords: ["holiday pay", "holiday allowance", "vakantiegeld", "vacation pay", "double holiday", "pécule de vacances", "vakantiebijslag"] },
+  { key: "end-of-year-bonus", label: "End-of-year bonus payment month", topic: "bonus", keywords: ["end-of-year", "end of year", "13th month", "year-end", "eindejaarspremie", "bonus", "fin d'année", "13e mois", "dertiende maand"] },
   { key: "flexi-job", label: "Flexi-jobs allowed", topic: "working-time", keywords: ["flexi"] },
 ];

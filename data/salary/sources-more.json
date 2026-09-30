@@ -11,7 +11,12 @@
         "eco-voucher",
         "ecocheque",
         "eco cheque",
-        "écochèque"
+        "écochèque",
+        "eco-cheque",
+        "eco cheques",
+        "éco-chèque",
+        "éco-chèques",
+        "ecocheques"
       ]
     },
     {
@@ -24,8 +29,9 @@
         "voiture de société",
         "car benefit",
         "benefit in kind",
-        "vaa",
-        "atn"
+        "voordeel alle aard",
+        "avantage de toute nature",
+        "v.a.a."
       ]
     },
     {
@@ -39,7 +45,12 @@
         "per km",
         "kilometervergoeding",
         "indemnité kilométrique",
-        "business travel"
+        "business travel",
+        "kilometre",
+        "km rate",
+        "business trip",
+        "dienstverplaatsing",
+        "own car"
       ]
     },
     {
@@ -53,7 +64,10 @@
         "thuiswerk",
         "télétravail",
         "work from home",
-        "remote work"
+        "remote work",
+        "working from home",
+        "office allowance",
+        "bureauvergoeding"
       ]
     },
     {
@@ -65,9 +79,12 @@
         "overtime pay",
         "overtime rate",
         "pay for overtime",
-        "premium",
         "overurentoeslag",
-        "sursalaire"
+        "sursalaire",
+        "paid for overtime",
+        "extra for overtime",
+        "overtime supplement",
+        "heures supplémentaires"
       ]
     },
     {
@@ -94,7 +111,11 @@
         "préavis",
         "dismissal",
         "termination",
-        "fire an employee"
+        "fire an employee",
+        "notice",
+        "dismiss",
+        "ontslag",
+        "licenciement"
       ]
     },
     {
@@ -107,7 +128,9 @@
         "salaire minimum",
         "gmmmi",
         "minimum salary",
-        "lowest salary"
+        "lowest salary",
+        "lowest monthly",
+        "minimum pay"
       ]
     },
     {
@@ -133,7 +156,12 @@
         "doktersbriefje",
         "ziektebriefje",
         "certificat médical",
-        "without certificate"
+        "without certificate",
+        "certificate",
+        "attest",
+        "doctor’s note",
+        "doctors note",
+        "sick days"
       ]
     },
     {
@@ -146,7 +174,12 @@
         "input deadline",
         "variable pay",
         "payroll deadline",
-        "afsluitdatum"
+        "afsluitdatum",
+        "payroll cut-off",
+        "payroll input",
+        "deadline",
+        "date limite",
+        "éléments variables"
       ]
     },
     {
@@ -161,7 +194,15 @@
         "fiets",
         "fietsvergoeding",
         "vélo",
-        "cycling"
+        "cycling",
+        "bikes",
+        "fiets per km",
+        "kilometervergoeding fiets",
+        "fietskilometervergoeding",
+        "indemnité kilométrique vélo",
+        "km allowance for bike",
+        "for the bicycle",
+        "allowance for the bicycle"
       ]
     }
   ],

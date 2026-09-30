@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import type { Doc } from "@/lib/documents";
-import { DocCard, KindBadge, TrustTag, Viewer, type ClaimScores } from "./documents";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { Doc, DocKind } from "@/lib/documents";
+import { KIND, KindBadge, TrustTag, Viewer, type ClaimScores } from "./documents";
 import Pipeline from "./pipeline";
 
 type Status = "trusted" | "conflict" | "stale" | "orphan" | "empty";
@@ -39,32 +39,35 @@ export type BrainData = {
   scores: ClaimScores;
 };
 
+type Topic = BrainData["topics"][number];
 type DomainId = "salary" | "people" | "clients" | "channels" | "legal" | "time";
 type Sel = { kind: "company" } | { kind: "domain"; id: DomainId } | { kind: "topic"; id: string };
 type Pt = { x: number; y: number };
+type Placed = { topic: Topic; docs: { doc: Doc }[] };
 
-// Geometry of the map (viewBox units).
+// A mind map that opens one branch at a time: the company, then Salary's topics, then one topic's documents.
+// Every node always exists; each level gives it a position, and CSS moves it there.
 const W = 1000;
-const H = 600;
-const C: Pt = { x: 610, y: 300 };
-const RING = 220;
-const CORE = 60;
-// Rounded so server and browser trig render identical markup.
+const H = 640;
+const C: Pt = { x: 540, y: 320 };
+const RING = 230;
+
 const round = (n: number) => Math.round(n * 100) / 100;
 const polar = (o: Pt, r: number, deg: number): Pt => ({
   x: round(o.x + r * Math.cos((deg * Math.PI) / 180)),
   y: round(o.y + r * Math.sin((deg * Math.PI) / 180)),
 });
+// Evenly spread n items over an arc of `span` degrees centred on `mid`.
+const spread = (i: number, n: number, mid: number, span: number) => (n < 2 ? mid : mid - span / 2 + (span / (n - 1)) * i);
 
 const DOMAINS: { id: DomainId; label: string; angle: number; live: boolean; blurb: string }[] = [
   { id: "salary", label: "Salary", angle: 180, live: true, blurb: "Payroll rules, rates and deadlines, scored source by source." },
-  { id: "people", label: "People", angle: 238, live: true, blurb: "Who wrote what, who is an expert, who has left." },
-  { id: "clients", label: "Clients", angle: 302, live: true, blurb: "The customers the answers are scoped to." },
+  { id: "people", label: "People", angle: 235, live: true, blurb: "Who wrote what, who is an expert, who has left." },
+  { id: "clients", label: "Clients", angle: 305, live: true, blurb: "The customers the answers are scoped to." },
   { id: "channels", label: "Channels", angle: 0, live: true, blurb: "Where the knowledge lives today." },
-  { id: "legal", label: "Legal", angle: 58, live: false, blurb: "Contracts, GDPR, labour law updates." },
-  { id: "time", label: "Time & absence", angle: 122, live: false, blurb: "Schedules, leave balances, working-time rules." },
+  { id: "legal", label: "Legal", angle: 55, live: false, blurb: "Contracts, GDPR, labour law updates." },
+  { id: "time", label: "Recruitment", angle: 125, live: false, blurb: "Vacancies, candidates and onboarding." },
 ];
-const domainPos = (id: DomainId) => polar(C, RING, DOMAINS.find((d) => d.id === id)!.angle);
 
 // Same colours as the answer card in the chat: blue is trusted, red contradicts.
 const STATUS: Record<Status, { label: string; color: string }> = {
@@ -74,257 +77,352 @@ const STATUS: Record<Status, { label: string; color: string }> = {
   orphan: { label: "No owner", color: "#c62a30" },
   empty: { label: "Nothing applies", color: "#d4d4d4" },
 };
+const RANK: Record<Status, number> = { trusted: 0, conflict: 1, stale: 2, orphan: 3, empty: 4 };
 
+// Short names that fit on the map; the full label shows in the panel.
 const SHORT: Record<string, string> = {
-  "indexation-2026": "Indexation 2026",
-  "sick-relapse": "Sick leave relapse",
+  "indexation-2026": "Indexation",
+  "sick-relapse": "Sick relapse",
   "meal-voucher-max": "Meal vouchers",
-  "overtime-recovery": "Overtime recovery",
+  "overtime-recovery": "Overtime rest",
   "holiday-pay": "Holiday pay",
-  "end-of-year-bonus": "End-of-year bonus",
+  "end-of-year-bonus": "Year-end bonus",
   "flexi-job": "Flexi-jobs",
+  "eco-vouchers": "Eco vouchers",
+  "company-car-minimum": "Company car",
+  "mileage-allowance": "Mileage",
+  "telework-allowance": "Telework",
+  "overtime-premium": "Overtime pay",
+  "maternity-leave": "Maternity leave",
+  "notice-period-5y": "Notice period",
+  "minimum-wage": "Minimum wage",
+  "student-work-hours": "Student work",
+  "sick-note": "Sick note",
+  "payroll-cutoff": "Payroll cut-off",
+  "bike-allowance": "Bike allowance",
 };
 const short = (t: { key: string; label: string }) => SHORT[t.key] ?? t.label;
+
+// What goes inside a document's circle.
+const ABBR: Record<DocKind, string> = {
+  PDF: "PDF",
+  Policy: "DOC",
+  Guide: "MD",
+  Official: "LAW",
+  SharePoint: "SP",
+  Confluence: "WIKI",
+  Email: "EML",
+  Teams: "CHAT",
+  Newsletter: "HTML",
+};
 
 const CHANNEL: Record<SourceType, string> = { official: "Official", sharepoint: "SharePoint", teams: "Teams", email: "Email" };
 const ROLE = { expert: "Expert", regular: "Consultant", new: "New hire" };
 const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
+const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
-// A soft curve between two nodes that bends around the core instead of under it.
-function curve(a: Pt, b: Pt) {
-  const cx = (a.x + b.x) / 2;
-  let cy = (a.y + b.y) / 2 - 30;
-  const apex = () => ({ x: (a.x + b.x) / 4 + cx / 2, y: (a.y + b.y) / 4 + cy / 2 });
-  for (let i = 0; i < 20 && Math.hypot(apex().x - C.x, apex().y - C.y) < CORE + 45; i++) cy += 25;
-  return `M${a.x},${a.y} Q${round(cx)},${round(cy)} ${b.x},${b.y}`;
+// A title in at most two short lines.
+function wrap(title: string, n: number): string[] {
+  const lines: string[] = [];
+  for (const word of title.split(" ")) {
+    const last = lines[lines.length - 1];
+    if (last !== undefined && (last + " " + word).length <= n) lines[lines.length - 1] = `${last} ${word}`;
+    else lines.push(word);
+  }
+  return lines.length > 2 ? [lines[0], clip(lines.slice(1).join(" "), n)] : lines.map((l) => clip(l, n));
+}
+
+// A soft mind-map branch from a parent to a child.
+const branch = (a: Pt, b: Pt) => {
+  const mx = (a.x + b.x) / 2;
+  return `M${a.x},${a.y} C${round(mx)},${a.y} ${round(mx)},${b.y} ${b.x},${b.y}`;
+};
+
+// Documents belong to the topics whose claims cite them; a document without claims joins the first topic of its folder.
+function place(data: BrainData): Placed[] {
+  const topics = [...data.topics].sort((a, b) => RANK[a.status] - RANK[b.status] || short(a).localeCompare(short(b)));
+  const firstOfFolder = new Map<string, string>();
+  topics.forEach((t) => t.files.forEach((f) => firstOfFolder.has(f.split("/")[0]) || firstOfFolder.set(f.split("/")[0], t.key)));
+  return topics.map((topic) => ({
+    topic,
+    docs: data.documents.filter((d) => topic.files.includes(d.path) || (!d.claims.length && firstOfFolder.get(d.folder) === topic.key)).map((doc) => ({ doc })),
+  }));
 }
 
 export default function BrainMap({ data }: { data: BrainData }) {
+  const placed = useMemo(() => place(data), [data]);
   const [sel, setSel] = useState<Sel>({ kind: "company" });
-  const [hover, setHover] = useState<Sel | null>(null);
-  const [folder, setFolder] = useState<string | null>(null);
+  const [hover, setHover] = useState<string | null>(null);
   const [open, setOpen] = useState<Doc | null>(null);
-  const focus = hover ?? sel;
 
-  const salary = domainPos("salary");
-  const topicPos = (i: number) => polar(salary, 160, 122 + (116 / Math.max(1, data.topics.length - 1)) * i);
-  const topicFocus = focus.kind === "topic" ? data.topics.find((t) => t.key === focus.id) : null;
-  const linked: DomainId[] = topicFocus ? ["channels", "people", "clients"] : [];
+  // Which branch is open decides the level: 0 the company, 1 Salary's topics, 2 one topic's documents.
+  const topicSel = sel.kind === "topic" ? placed.find((p) => p.topic.key === sel.id) : undefined;
+  const level = topicSel ? 2 : sel.kind === "domain" && sel.id === "salary" ? 1 : 0;
 
-  // Selecting a topic also narrows the documents below to the folder it comes from.
-  const select = (s: Sel) => {
-    setSel(s);
-    if (s.kind === "topic") {
-      const f = data.topics.find((t) => t.key === s.id)?.files[0]?.split("/")[0];
-      setFolder(f && data.folders[f] ? f : null);
-    } else if (s.kind === "company") setFolder(null);
+  // Positions per level.
+  const company: Pt = level === 0 ? C : { x: 70, y: 320 };
+  const companyR = level === 0 ? 60 : 30;
+  const salary: Pt = level === 0 ? polar(C, RING, 180) : level === 1 ? { x: 230, y: 320 } : { x: 190, y: 320 };
+  const domainPos = (d: (typeof DOMAINS)[number]): Pt => (d.id === "salary" ? salary : level === 0 ? polar(C, RING, d.angle) : company);
+  const topicPos = (i: number): Pt => {
+    const n = placed.length;
+    if (level === 0) return salary;
+    // An evenly spaced column that bulges out in the middle, so every label has its own line.
+    const t = n < 2 ? 0 : (i / (n - 1)) * 2 - 1;
+    if (level === 1) return { x: round(salary.x + 190 + 90 * (1 - t * t)), y: round(320 + t * 280) };
+    return { x: round(salary.x + 95 + 35 * (1 - t * t)), y: round(335 + t * 235) };
   };
-  const openFile = (file: string) => setOpen(data.documents.find((d) => d.path === file) ?? null);
+  const focus: Pt = { x: 470, y: 320 }; // where an opened topic sits
+  const docPos = (i: number, n: number): Pt => polar(focus, 215, spread(i, n, 0, Math.min(140, n * 24)));
 
-  const isSel = (s: Sel) => JSON.stringify(s) === JSON.stringify(sel);
-  const bind = (s: Sel, label: string) => ({
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || open) return;
+      setSel(level === 2 ? { kind: "domain", id: "salary" } : { kind: "company" });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [level, open]);
+
+  const bind = (s: Sel, label: string, hoverKey?: string) => ({
     role: "button",
     tabIndex: 0,
     "aria-label": label,
-    "aria-pressed": isSel(s),
     className: "brain-node cursor-pointer outline-none",
-    onClick: () => select(s),
+    onClick: () => setSel(s),
     onKeyDown: (e: React.KeyboardEvent) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        select(s);
+        setSel(s);
       }
     },
-    onMouseEnter: () => setHover(s),
-    onMouseLeave: () => setHover(null),
+    onMouseEnter: () => hoverKey && setHover(hoverKey),
+    onMouseLeave: () => hoverKey && setHover(null),
   });
+  const at = (p: Pt) => ({ transform: `translate(${p.x}px, ${p.y}px)` });
 
-  const docs = data.documents.filter((d) => !folder || d.folder === folder);
+  const crumbs: { label: string; to: Sel }[] = [
+    { label: data.company, to: { kind: "company" } },
+    ...(level >= 1 ? [{ label: "Salary", to: { kind: "domain", id: "salary" } as Sel }] : []),
+    ...(topicSel ? [{ label: short(topicSel.topic), to: sel }] : []),
+  ];
+  const branchKey = `${level}-${topicSel?.topic.key ?? ""}`;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-20 text-[#161616]">
       <header className="mb-8 max-w-2xl">
         <h1 className="font-serif text-5xl leading-none tracking-tight sm:text-6xl">The {data.company} brain</h1>
         <p className="mt-3 text-[15px] leading-relaxed text-neutral-600">
-          Everything the brain has read, and how it fits together. Pick a topic to see the answer and the documents behind it.
+          Everything the brain has read, as a mind map. Click Salary to open its topics, then a topic to see the documents behind it.
         </p>
       </header>
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="rounded-3xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-          <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="group" aria-label={`Knowledge map of ${data.company}`}>
+        <div className="relative overflow-hidden rounded-3xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+          <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="group" aria-label={`Mind map of ${data.company}`}>
             <defs>
               <filter id="lift" x="-50%" y="-50%" width="200%" height="200%">
                 <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000" floodOpacity="0.08" />
               </filter>
             </defs>
 
-            <circle cx={C.x} cy={C.y} r={RING} fill="none" stroke="#161616" strokeOpacity="0.06" />
+            {/* branches: drawn for the open level, fading in once the nodes have moved */}
+            <g key={branchKey} className="mm-branches" fill="none" strokeWidth="1.5">
+              {level === 0 && <circle cx={C.x} cy={C.y} r={RING} stroke="#161616" strokeOpacity="0.05" />}
+              {level === 0 &&
+                DOMAINS.map((d) => (
+                  <path key={d.id} d={branch(C, domainPos(d))} stroke={d.id === "salary" ? "#1463ff" : "#e5e5e5"} strokeDasharray={d.live ? undefined : "3 6"} />
+                ))}
+              {level >= 1 && <path d={branch(company, salary)} stroke="#1463ff" />}
+              {level === 1 && placed.map((p, i) => <path key={p.topic.key} d={branch(salary, topicPos(i))} stroke={hover === p.topic.key ? "#1463ff" : "#e5e5e5"} />)}
+              {level === 2 && topicSel && (
+                <>
+                  {placed.map((p, i) => (p === topicSel ? null : <path key={p.topic.key} d={branch(salary, topicPos(i))} stroke="#f0f0f0" />))}
+                  <path d={branch(salary, focus)} stroke="#1463ff" />
+                  {topicSel.docs.map(({ doc }, i) => (
+                    <path key={doc.path} d={branch(focus, docPos(i, topicSel.docs.length))} stroke={hover === doc.path ? "#1463ff" : "#e5e5e5"} />
+                  ))}
+                </>
+              )}
+            </g>
 
-            {DOMAINS.map((d) => {
-              const p = domainPos(d.id);
-              const isSalary = d.id === "salary";
-              const lit = linked.includes(d.id);
-              return (
-                <line
-                  key={d.id}
-                  x1={p.x}
-                  y1={p.y}
-                  x2={C.x}
-                  y2={C.y}
-                  stroke={isSalary ? "#1463ff" : lit ? "#9db8ff" : "#e5e5e5"}
-                  strokeWidth={isSalary ? 2 : 1.25}
-                  strokeDasharray={d.live ? undefined : "3 6"}
-                />
-              );
-            })}
-            {data.topics.map((t, i) => {
-              const p = topicPos(i);
-              return <line key={t.key} x1={p.x} y1={p.y} x2={salary.x} y2={salary.y} stroke="#e5e5e5" strokeWidth="1.25" />;
-            })}
-
-            {topicFocus &&
-              linked.map((id) => (
-                <path
-                  key={`${topicFocus.key}-${id}`}
-                  d={curve(topicPos(data.topics.indexOf(topicFocus)), domainPos(id))}
-                  fill="none"
-                  stroke="#1463ff"
-                  strokeOpacity="0.35"
-                  strokeWidth="1.25"
-                  className="brain-synapse"
-                />
-              ))}
-
-            {data.topics.map((t, i) => {
-              const p = topicPos(i);
-              const on = topicFocus?.key === t.key;
-              const color = STATUS[t.status].color;
-              return (
-                <g key={t.key} {...bind({ kind: "topic", id: t.key }, `${t.label}: ${STATUS[t.status].label}`)}>
-                  <circle cx={p.x} cy={p.y} r={22} fill="transparent" />
-                  <circle cx={p.x} cy={p.y} r={on ? 8 : 6} fill={color} stroke="#fff" strokeWidth="2.5" />
-                  <text x={p.x - 16} y={p.y + 5} textAnchor="end" fontSize="14.5" fill="#161616" fillOpacity={on ? 1 : 0.75} fontWeight={on ? 600 : 400}>
-                    {short(t)}
-                  </text>
-                  {on && t.answer && (
-                    <text x={p.x + 14} y={p.y + 5} fontSize="13.5" fontWeight="600" fill={color}>
-                      {t.answer}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-
-            {DOMAINS.map((d) => {
-              const p = domainPos(d.id);
-              const isSalary = d.id === "salary";
-              const on = linked.includes(d.id) || (focus.kind === "domain" && focus.id === d.id);
-              const r = isSalary ? 38 : d.live ? 32 : 20;
-              return (
-                <g key={d.id} {...bind({ kind: "domain", id: d.id }, d.live ? d.label : `${d.label}, not connected yet`)}>
+            {/* the other areas fold into the company when Salary opens */}
+            {DOMAINS.filter((d) => d.id !== "salary").map((d) => (
+              <g key={d.id} className="mm-node" style={{ ...at(domainPos(d)), opacity: level === 0 ? 1 : 0 }} pointerEvents={level === 0 ? "auto" : "none"}>
+                <g {...bind({ kind: "domain", id: d.id }, d.live ? d.label : `${d.label}, not connected yet`)}>
                   <circle
-                    cx={p.x}
-                    cy={p.y}
-                    r={r}
-                    fill={isSalary ? "#1463ff" : d.live ? "#fff" : "#fafaf9"}
-                    stroke={isSalary ? "none" : on ? "#1463ff" : d.live ? "#e5e5e5" : "#d4d4d4"}
+                    r={d.live ? 34 : 22}
+                    fill={d.live ? "#fff" : "#fafaf9"}
+                    stroke={sel.kind === "domain" && sel.id === d.id ? "#1463ff" : d.live ? "#e5e5e5" : "#d4d4d4"}
                     strokeWidth="1.25"
                     strokeDasharray={d.live ? undefined : "3 4"}
                     filter={d.live ? "url(#lift)" : undefined}
                   />
-                  <text
-                    x={p.x}
-                    y={d.live ? p.y + 4.5 : p.y + r + 18}
-                    textAnchor="middle"
-                    fontSize={isSalary ? 15 : 12.5}
-                    fontWeight="500"
-                    fill={isSalary ? "#fff" : d.live ? "#161616" : "#a3a3a3"}
-                  >
+                  <text y={d.live ? 4.5 : 22 + 18} textAnchor="middle" fontSize="13" fontWeight="500" fill={d.live ? "#161616" : "#a3a3a3"}>
                     {d.label}
                   </text>
+                </g>
+              </g>
+            ))}
+
+            {/* Salary's topics */}
+            {placed.map((p, i) => {
+              const pos = level === 2 && p === topicSel ? focus : topicPos(i);
+              const color = STATUS[p.topic.status].color;
+              const isOpen = p === topicSel;
+              const hot = hover === p.topic.key;
+              const visible = level === 1 || level === 2;
+              const small = level === 2 && !isOpen;
+              const r = isOpen ? 42 : small ? 6 : 10;
+              return (
+                <g key={p.topic.key} className="mm-node" style={{ ...at(pos), opacity: visible ? 1 : 0 }} pointerEvents={visible ? "auto" : "none"}>
+                  <g {...bind({ kind: "topic", id: p.topic.key }, `${p.topic.label}: ${STATUS[p.topic.status].label}, ${p.docs.length} documents`, p.topic.key)}>
+                    <circle r={Math.max(r, 14)} fill="transparent" />
+                    <circle
+                      r={r}
+                      className="mm-size"
+                      fill={isOpen ? color : `${color}1f`}
+                      stroke={color}
+                      strokeWidth={isOpen ? 0 : 1.5}
+                      filter={isOpen ? "url(#lift)" : undefined}
+                    />
+                    {isOpen ? (
+                      wrap(short(p.topic), 11).map((line, j, all) => (
+                        <text key={j} y={4.5 + (j - (all.length - 1) / 2) * 15} textAnchor="middle" fontSize="13" fontWeight="600" fill="#fff">
+                          {line}
+                        </text>
+                      ))
+                    ) : small ? (
+                      hot && (
+                        <text x={10} y={4} fontSize="12" fill="#161616">
+                          {short(p.topic)}
+                        </text>
+                      )
+                    ) : (
+                      <>
+                        <text x={20} y={5} fontSize="14" fontWeight={hot ? 600 : 500} fill="#161616">
+                          {short(p.topic)}
+                          <tspan dx="8" fontWeight="400" fill="#8a8a8a">
+                            {p.topic.answer ?? STATUS[p.topic.status].label}
+                          </tspan>
+                        </text>
+                      </>
+                    )}
+                  </g>
                 </g>
               );
             })}
 
-            <g {...bind({ kind: "company" }, data.company)}>
-              <circle cx={C.x} cy={C.y} r={CORE} fill="#161616" filter="url(#lift)" />
-              <text x={C.x} y={C.y + 10} textAnchor="middle" fontSize="30" fill="#fff" className="font-serif">
-                {data.company}
-              </text>
+            {/* the open topic's documents */}
+            {topicSel?.docs.map(({ doc }, i) => {
+              const pos = docPos(i, topicSel.docs.length);
+              const color = KIND[doc.kind].color;
+              const hot = hover === doc.path;
+              return (
+                <g key={`${topicSel.topic.key}-${doc.path}`} className="mm-node" style={at(pos)}>
+                  <g
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${doc.title}, ${KIND[doc.kind].label}. Open document`}
+                    className="brain-node mm-pop cursor-pointer outline-none"
+                    style={{ animationDelay: `${120 + i * 50}ms` }}
+                    onClick={() => setOpen(doc)}
+                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setOpen(doc))}
+                    onMouseEnter={() => setHover(doc.path)}
+                    onMouseLeave={() => setHover(null)}
+                  >
+                    <circle r="22" fill="#fff" stroke={color} strokeWidth={hot ? 2.5 : 1.5} filter="url(#lift)" />
+                    <text y="4" textAnchor="middle" fontSize="10" fontWeight="600" letterSpacing="0.03em" fill={color}>
+                      {ABBR[doc.kind]}
+                    </text>
+                    {wrap(doc.title, 26).map((line, j) => (
+                      <text key={j} x="32" y={-5 + j * 15} fontSize="13" fontWeight="500" fill="#161616" textDecoration={hot ? "underline" : undefined}>
+                        {line}
+                      </text>
+                    ))}
+                    <text x="32" y={wrap(doc.title, 26).length > 1 ? 26 : 12} fontSize="11.5" fill={color}>
+                      {KIND[doc.kind].label}
+                      {doc.date ? `, ${doc.date.slice(0, 4)}` : ""}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
+
+            {/* Salary */}
+            <g className="mm-node" style={at(salary)}>
+              <g {...bind({ kind: "domain", id: "salary" }, `Salary, ${placed.length} topics`)}>
+                <circle r={level === 2 ? 30 : 42} className="mm-size" fill="#1463ff" filter="url(#lift)" />
+                <text y="5" textAnchor="middle" fontSize={level === 2 ? 13 : 15} fontWeight="500" fill="#fff">
+                  Salary
+                </text>
+                <text y={level === 2 ? 50 : 62} textAnchor="middle" fontSize="12" fill="#737373" style={{ opacity: level === 0 ? 1 : 0 }} className="mm-fade">
+                  {placed.length} topics, {data.documents.length} documents
+                </text>
+              </g>
+            </g>
+
+            {/* the company */}
+            <g className="mm-node" style={at(company)}>
+              <g {...bind({ kind: "company" }, data.company)}>
+                <circle r={companyR} className="mm-size" fill="#161616" filter="url(#lift)" />
+                <text y={level === 0 ? 10 : 5} textAnchor="middle" fontSize={level === 0 ? 30 : 14} fill="#fff" className="font-serif">
+                  {data.company}
+                </text>
+              </g>
             </g>
           </svg>
 
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 px-6 pb-5 text-xs text-neutral-500">
-            {(["trusted", "conflict", "stale", "orphan"] as Status[]).map((s) => (
-              <li key={s} className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full" style={{ background: STATUS[s].color }} />
-                {STATUS[s].label}
-              </li>
+          <nav aria-label="Map level" className="absolute left-4 top-4 flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-sm shadow-[0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur">
+            {crumbs.map((c, i) => (
+              <span key={c.label} className="flex items-center gap-1">
+                {i > 0 && <span className="text-neutral-300">›</span>}
+                <button onClick={() => setSel(c.to)} className={i === crumbs.length - 1 ? "font-medium" : "text-neutral-500 hover:text-neutral-900"}>
+                  {c.label}
+                </button>
+              </span>
             ))}
+          </nav>
+
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 px-6 pb-5 text-xs text-neutral-500">
+            {level === 2
+              ? (["PDF", "Policy", "Guide", "Official", "SharePoint", "Confluence", "Email", "Teams", "Newsletter"] as DocKind[])
+                  .filter((k) => topicSel?.docs.some((d) => d.doc.kind === k))
+                  .map((k) => (
+                    <li key={k} className="flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full border-[1.5px]" style={{ borderColor: KIND[k].color }} />
+                      {KIND[k].label}
+                    </li>
+                  ))
+              : (["trusted", "conflict", "stale", "orphan"] as Status[]).map((s) => (
+                  <li key={s} className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full" style={{ background: STATUS[s].color }} />
+                    {STATUS[s].label}
+                  </li>
+                ))}
           </ul>
         </div>
 
-        <aside className="rounded-3xl bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)] lg:max-h-[600px] lg:overflow-y-auto" aria-live="polite">
-          <Panel sel={sel} data={data} onSelect={select} onOpenFile={openFile} />
+        <aside className="rounded-3xl bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)] lg:max-h-[640px] lg:overflow-y-auto" aria-live="polite">
+          <Panel sel={sel} data={data} placed={placed} onSelect={setSel} onOpen={setOpen} />
         </aside>
       </section>
 
       <Pipeline data={data} />
-
-      <section className="mt-16">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="font-serif text-4xl leading-none">Documents</h2>
-            <p className="mt-2 text-sm text-neutral-500">
-              {docs.length} of {data.documents.length} source documents. Open one to read it and zoom in.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter documents">
-            <Pill on={!folder} onClick={() => setFolder(null)}>
-              All
-            </Pill>
-            {Object.entries(data.folders).map(([id, label]) => (
-              <Pill key={id} on={folder === id} onClick={() => setFolder(id)}>
-                {label}
-              </Pill>
-            ))}
-          </div>
-        </div>
-        <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
-          {docs.map((d) => (
-            <DocCard key={d.path} doc={d} scores={data.scores} onOpen={() => setOpen(d)} />
-          ))}
-        </div>
-      </section>
 
       {open && <Viewer doc={open} scores={data.scores} onClose={() => setOpen(null)} />}
     </main>
   );
 }
 
-function Pill({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={on}
-      className={`rounded-full border px-3 py-1.5 text-sm transition ${on ? "border-[#161616] bg-[#161616] text-white" : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400"}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Panel({ sel, data, onSelect, onOpenFile }: { sel: Sel; data: BrainData; onSelect: (s: Sel) => void; onOpenFile: (file: string) => void }) {
-  const person = (id: string | null) => (id ? data.people.find((p) => p.id === id)?.name ?? id : null);
-
+function Panel({ sel, data, placed, onSelect, onOpen }: { sel: Sel; data: BrainData; placed: Placed[]; onSelect: (s: Sel) => void; onOpen: (d: Doc) => void }) {
   if (sel.kind === "company") {
     const n = (s: Status[]) => data.topics.filter((t) => s.includes(t.status)).length;
     return (
       <>
         <Title kicker="Company" title={data.company} />
         <p className="text-sm leading-relaxed text-neutral-600">
-          The brain has read {data.documents.length} documents about salary. The other subjects fill in once their sources are connected.
+          The brain has read {data.documents.length} documents across {placed.length} salary topics. The other subjects fill in once their sources are connected.
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2">
           <Big n={n(["trusted"])} label="trusted answers" color={STATUS.trusted.color} />
@@ -332,7 +430,7 @@ function Panel({ sel, data, onSelect, onOpenFile }: { sel: Sel; data: BrainData;
         </div>
         <List>
           {DOMAINS.map((d) => (
-            <Row key={d.id} onClick={() => onSelect({ kind: "domain", id: d.id })} right={d.live ? "Connected" : "Empty"} muted={!d.live}>
+            <Row key={d.id} onClick={() => onSelect({ kind: "domain", id: d.id })} right={d.live ? (d.id === "salary" ? `${placed.length} topics` : "Connected") : "Empty"} muted={!d.live}>
               {d.label}
             </Row>
           ))}
@@ -357,9 +455,10 @@ function Panel({ sel, data, onSelect, onOpenFile }: { sel: Sel; data: BrainData;
       );
     const rows =
       d.id === "salary"
-        ? data.topics.map((t) => (
+        ? placed.map(({ topic: t, docs }) => (
             <Row key={t.key} onClick={() => onSelect({ kind: "topic", id: t.key })} dot={STATUS[t.status].color} right={t.answer ?? "–"}>
               {short(t)}
+              <span className="ml-1.5 text-xs text-neutral-400">{docs.length}</span>
             </Row>
           ))
         : d.id === "people"
@@ -383,13 +482,14 @@ function Panel({ sel, data, onSelect, onOpenFile }: { sel: Sel; data: BrainData;
       <>
         {back}
         <Title kicker="Knowledge area" title={d.label} />
-        <p className="text-sm text-neutral-600">{d.blurb}</p>
+        <p className="text-sm text-neutral-600">{d.id === "salary" ? `${placed.length} topics. The number is how many documents each has.` : d.blurb}</p>
         <List>{rows}</List>
       </>
     );
   }
 
-  const t = data.topics.find((x) => x.key === sel.id)!;
+  const p = placed.find((x) => x.topic.key === sel.id)!;
+  const t = p.topic;
   const color = STATUS[t.status].color;
   return (
     <>
@@ -402,33 +502,29 @@ function Panel({ sel, data, onSelect, onOpenFile }: { sel: Sel; data: BrainData;
       </div>
       <div className="mt-1 text-xs text-neutral-400">For {data.reference}</div>
 
-      <h3 className="mt-6 text-xs text-neutral-400">What each source says</h3>
+      <h3 className="mt-6 text-xs text-neutral-400">Documents ({p.docs.length})</h3>
+      {p.docs.length === 0 && <p className="mt-2 text-sm text-neutral-500">No source files yet. This topic runs on example claims.</p>}
       <ul className="mt-1 divide-y divide-neutral-100">
-        {t.claims.map((c) => {
-          const doc = c.id && data.documents.find((d) => d.claims.some((x) => x.id === c.id));
-          const inner = (
-            <>
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="font-medium">{c.value}</span>
-                <span className="shrink-0 text-xs">
-                  <TrustTag score={c.score} excluded={c.excluded} />
-                </span>
-              </div>
-              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-neutral-500">
-                {doc ? <KindBadge kind={doc.kind} /> : <span>{CHANNEL[c.source]}</span>}
-                <span className="truncate">{person(c.author) ?? c.title}</span>
-              </div>
-            </>
-          );
+        {p.docs.map(({ doc }) => {
+          const claim = doc.claims.find((c) => t.claims.some((x) => x.id === c.id));
+          const s = claim ? data.scores[claim.id] : undefined;
           return (
-            <li key={c.id} className={c.excluded ? "opacity-50" : ""}>
-              {doc ? (
-                <button onClick={() => onOpenFile(doc.path)} className="block w-full rounded-lg px-1.5 py-2 text-left text-sm transition hover:bg-neutral-50">
-                  {inner}
-                </button>
-              ) : (
-                <div className="px-1.5 py-2 text-sm">{inner}</div>
-              )}
+            <li key={doc.path}>
+              <button onClick={() => onOpen(doc)} className="block w-full rounded-lg px-1.5 py-2 text-left text-sm transition hover:bg-neutral-50">
+                <div className="flex items-center gap-2">
+                  <KindBadge kind={doc.kind} />
+                  <span className="min-w-0 flex-1 truncate font-medium">{doc.title}</span>
+                </div>
+                <div className="mt-0.5 flex items-baseline justify-between gap-3 text-xs text-neutral-500">
+                  <span className="truncate">{[doc.author, doc.date].filter(Boolean).join(", ")}</span>
+                  {claim && (
+                    <span className="shrink-0">
+                      <span className="font-medium text-neutral-800">{claim.value}</span>
+                      {s && <TrustTag score={s.score} excluded={s.excluded} />}
+                    </span>
+                  )}
+                </div>
+              </button>
             </li>
           );
         })}

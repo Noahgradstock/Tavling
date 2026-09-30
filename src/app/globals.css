@@ -37,36 +37,36 @@ body {
   .barcode-bar { animation: none; }
 }
 
-/* Company brain map */
+/* Company brain map: a mind map whose nodes glide to their place when a branch opens */
 .brain-node:focus-visible circle:nth-of-type(2),
 .brain-node:focus-visible circle:only-of-type {
   stroke: #1463ff;
   stroke-width: 2.5;
 }
-.brain-synapse {
-  stroke-dasharray: 700;
-  animation: synapse 500ms ease-out both;
+.mm-node {
+  transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 400ms ease;
 }
-@keyframes synapse {
-  from { stroke-dashoffset: 700; }
-  to { stroke-dashoffset: 0; }
+.mm-size {
+  transition: r 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.mm-fade {
+  transition: opacity 300ms ease;
+}
+.mm-branches {
+  animation: mm-in 450ms ease 300ms both;
+}
+.mm-pop {
+  animation: mm-pop 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes mm-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mm-pop {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .brain-synapse { animation: none; }
-}
-
-/* Scanner line sweeping over a document excerpt. */
-.scan-line {
-  animation: scan-line 2.6s ease-in-out infinite;
-}
-
-@keyframes scan-line {
-  0% { top: 0; opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scan-line { animation: none; opacity: 0; }
+  .mm-node, .mm-size, .mm-fade { transition: none; }
+  .mm-branches, .mm-pop { animation: none; }
 }

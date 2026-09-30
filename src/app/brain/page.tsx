@@ -5,7 +5,7 @@ import { evaluateFact } from "@/trust-engine";
 import { allFeedback, kb, now } from "@/lib/trust-server";
 import { canReadClaim, clientsOf, countriesOf } from "@/lib/access";
 import { requireUser } from "@/lib/session";
-import { DOC_FOLDERS, loadDocuments } from "@/lib/documents";
+import { docFolders, loadDocuments } from "@/lib/documents";
 import BrainMap, { type BrainData } from "./brain-map";
 
 export const metadata: Metadata = {
@@ -84,7 +84,7 @@ export default async function BrainPage() {
     })),
     files: listFiles(path.join(process.cwd(), "data", "salary")).filter((f) => !hiddenFiles.has(f)),
     documents: loadDocuments(kb).filter((d) => !hiddenFiles.has(d.path)),
-    folders: DOC_FOLDERS,
+    folders: docFolders(),
     scores: Object.fromEntries(topics.flatMap((t) => t.claims.map((c) => [c.id, { score: c.score, excluded: c.excluded }]))),
   };
 

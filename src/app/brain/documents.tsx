@@ -13,8 +13,9 @@ const PAGE_W = 680;
 export const KIND: Record<DocKind, { label: string; color: string }> = {
   PDF: { label: "PDF", color: "#c62a30" },
   Policy: { label: "Policy", color: "#161616" },
+  Guide: { label: "Guide", color: "#0f766e" },
   Official: { label: "Official", color: "#161616" },
-  SharePoint: { label: "SharePoint", color: "#0f7b6c" },
+  SharePoint: { label: "SharePoint", color: "#0369a1" },
   Confluence: { label: "Confluence", color: "#1868db" },
   Email: { label: "Email", color: "#1463ff" },
   Teams: { label: "Teams", color: "#5b5fc7" },
@@ -46,8 +47,10 @@ export function DocPage({ doc, interactive = true }: { doc: Doc; interactive?: b
   return (
     <div className="bg-white text-[#161616]" style={{ width: PAGE_W, minHeight: PAGE_W * 1.3 }}>
       {b.type === "text" && (
-        <div className={`whitespace-pre-wrap px-14 py-14 ${b.mono ? "font-mono text-[12px] leading-[1.6]" : "text-[14px] leading-[1.7]"}`}>{b.text}</div>
+        <div className={`whitespace-pre-wrap px-14 py-14 ${b.mono ? "font-mono text-[13px] leading-[1.6]" : "text-[14px] leading-[1.7]"}`}>{b.text}</div>
       )}
+
+      {b.type === "markdown" && <Markdown text={b.text} />}
 
       {b.type === "email" && (
         <div className="px-12 py-10">
@@ -96,6 +99,42 @@ export function DocPage({ doc, interactive = true }: { doc: Doc; interactive?: b
   );
 }
 
+// Just enough Markdown for the guides: headings, lists, bold and paragraphs.
+function Markdown({ text }: { text: string }) {
+  const inline = (line: string) =>
+    line.split(/(\*\*[^*]+\*\*)/g).map((part, i) => (part.startsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> : part));
+  const blocks = text.split(/\n\s*\n/);
+  return (
+    <div className="px-14 py-14 text-[14px] leading-[1.7]">
+      {blocks.map((block, i) => {
+        const lines = block.split("\n");
+        const h = block.match(/^(#{1,3})\s+(.*)$/);
+        if (h && lines.length === 1) {
+          const size = h[1].length === 1 ? "text-[26px] font-semibold" : h[1].length === 2 ? "mt-2 text-[18px] font-semibold" : "text-[15px] font-semibold";
+          return (
+            <div key={i} className={`mb-3 leading-snug ${size}`}>
+              {inline(h[2])}
+            </div>
+          );
+        }
+        if (lines.every((l) => /^\s*([-*]|\d+\.)\s/.test(l)))
+          return (
+            <ul key={i} className="mb-4 list-disc pl-5">
+              {lines.map((l, j) => (
+                <li key={j}>{inline(l.replace(/^\s*([-*]|\d+\.)\s/, ""))}</li>
+              ))}
+            </ul>
+          );
+        return (
+          <p key={i} className="mb-4 whitespace-pre-wrap">
+            {inline(block.replace(/^#{1,3}\s+/gm, ""))}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 // The newsletter is real HTML: shown as-is in a sandboxed frame (no scripts), sized to its content.
 function HtmlPage({ html, interactive }: { html: string; interactive: boolean }) {
   const ref = useRef<HTMLIFrameElement>(null);
@@ -117,30 +156,45 @@ function HtmlPage({ html, interactive }: { html: string; interactive: boolean })
   );
 }
 
-// A live miniature of the first page.
+// A live miniature of the first page, scaled to whatever width it gets.
 export function Thumb({ doc }: { doc: Doc }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(0.2);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setZoom(e.contentRect.width / PAGE_W));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
-    <div className="pointer-events-none relative aspect-[4/5] overflow-hidden rounded-xl bg-white ring-1 ring-black/[0.06]" aria-hidden>
-      <div style={{ zoom: 0.36 }}>
+    <div ref={ref} className="pointer-events-none relative aspect-[3/4] overflow-hidden rounded-lg bg-white ring-1 ring-black/[0.08]" aria-hidden>
+      <div style={{ zoom }}>
         <DocPage doc={doc} interactive={false} />
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent" />
     </div>
   );
 }
 
+// One document as a readable card: a small page preview, then the title and what it says in normal-size text.
 export function DocCard({ doc, scores, onOpen }: { doc: Doc; scores: ClaimScores; onOpen: () => void }) {
   return (
-    <button onClick={onOpen} className="group flex flex-col gap-3 rounded-2xl p-2 text-left transition hover:bg-white focus-visible:outline-2 focus-visible:outline-[#1463ff]">
-      <div className="transition group-hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)]">
+    <button
+      onClick={onOpen}
+      className="group flex gap-4 rounded-2xl bg-white p-4 text-left shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.2)] focus-visible:outline-2 focus-visible:outline-[#1463ff]"
+    >
+      <div className="w-20 shrink-0 sm:w-24">
         <Thumb doc={doc} />
       </div>
-      <div className="px-1">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <KindBadge kind={doc.kind} />
-          <span className="truncate text-xs text-neutral-400">{fmtDate(doc.date)}</span>
+          <span className="truncate text-xs text-neutral-400">
+            {[doc.author, fmtDate(doc.date)].filter(Boolean).join(", ")}
+          </span>
         </div>
-        <div className="mt-1.5 line-clamp-2 text-sm font-medium leading-snug">{doc.title}</div>
+        <div className="mt-1.5 line-clamp-2 text-[15px] font-medium leading-snug group-hover:text-[#1463ff]">{doc.title}</div>
+        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-neutral-500">{doc.excerpt}</p>
         <ClaimLine doc={doc} scores={scores} />
       </div>
     </button>
@@ -149,25 +203,30 @@ export function DocCard({ doc, scores, onOpen }: { doc: Doc; scores: ClaimScores
 
 // What the brain took from the document, with how much it trusts it.
 function ClaimLine({ doc, scores }: { doc: Doc; scores: ClaimScores }) {
-  const c = doc.claims[0];
-  if (!c) return <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-500">{doc.excerpt}</p>;
-  const s = scores[c.id];
+  if (!doc.claims.length) return null;
   return (
-    <p className="mt-1 text-xs leading-relaxed text-neutral-500">
-      Says <span className="font-medium text-neutral-800">{c.value}</span>
-      {doc.claims.length > 1 && ` and ${doc.claims.length - 1} more`}
-      {s && <TrustTag score={s.score} excluded={s.excluded} />}
-    </p>
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {doc.claims.slice(0, 3).map((c) => {
+        const s = scores[c.id];
+        return (
+          <span key={c.id} className="rounded-full border border-neutral-200 px-2 py-0.5 text-xs">
+            <span className="font-medium">{c.value}</span>
+            {s && <TrustTag score={s.score} excluded={s.excluded} />}
+          </span>
+        );
+      })}
+      {doc.claims.length > 3 && <span className="px-1 py-0.5 text-xs text-neutral-400">+{doc.claims.length - 3} more</span>}
+    </div>
   );
 }
 
-export function TrustTag({ score, excluded }: { score: number | null; excluded: string | null }) {
-  if (excluded) return <span className="ml-1.5 text-neutral-400">other client</span>;
+export function TrustTag({ score, excluded, long }: { score: number | null; excluded: string | null; long?: boolean }) {
+  if (excluded) return <span className="ml-1.5 text-neutral-400">other scope</span>;
   if (score === null) return null;
   const color = score >= 0.75 ? "#1463ff" : score >= 0.5 ? "#d97706" : "#c62a30";
   return (
     <span className="ml-1.5 tabular-nums" style={{ color }}>
-      {Math.round(score * 100)}% trusted
+      {Math.round(score * 100)}%{long && " trusted"}
     </span>
   );
 }
@@ -260,7 +319,7 @@ export function Viewer({ doc, scores, onClose }: { doc: Doc; scores: ClaimScores
                       <div className="font-serif text-2xl leading-none">{c.value}</div>
                       <div className="mt-1.5 text-xs text-neutral-500">{c.fact}</div>
                       <div className="mt-1 text-xs">
-                        <TrustTag {...(scores[c.id] ?? { score: null, excluded: null })} />
+                        <TrustTag {...(scores[c.id] ?? { score: null, excluded: null })} long />
                       </div>
                     </li>
                   ))}
