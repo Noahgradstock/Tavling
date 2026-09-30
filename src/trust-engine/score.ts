@@ -161,7 +161,12 @@ export function evaluateFact(fact: Fact, kb: KnowledgeBase, ctx: Context, feedba
 
   // The most specific trusted claim wins (a client agreement beats the sector rule); otherwise the highest score.
   const trusted = claims.filter((c) => c.score >= STATUS.trusted);
-  const best = trusted.sort((a, b) => specificity[b.relevance] - specificity[a.relevance] || b.score - a.score)[0] ?? claims[0] ?? null;
+  const top = trusted.sort((a, b) => specificity[b.relevance] - specificity[a.relevance] || b.score - a.score)[0] ?? claims[0] ?? null;
+  // When a trusted official source says the same thing at the same level, show it as the primary source.
+  const official = top && trusted.find(
+    (c) => c.claim.source.type === "official" && sameValue(c.claim.value, top.claim.value) && c.relevance === top.relevance,
+  );
+  const best = official ?? top;
   if (best) {
     claims.splice(claims.indexOf(best), 1);
     claims.unshift(best);

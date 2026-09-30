@@ -44,18 +44,23 @@ export function Result({
 }) {
   const [open, setOpen] = useState<string | null>(null);
   const [showSorting, setShowSorting] = useState(false);
+  const [showExcluded, setShowExcluded] = useState(false);
   const [asked, setAsked] = useState(false);
   const { name, label } = useNames(hit);
   const { best, fact, status, expert } = hit;
 
   const others = best ? hit.claims.filter((c) => c.claim.id !== best.claim.id) : [];
+  const backing = best ? [best, ...others.filter((c) => sameValue(c.claim.value, best.claim.value))] : [];
   const disagree = best ? others.filter((c) => !sameValue(c.claim.value, best.claim.value)) : [];
-  const agree = best ? others.filter((c) => sameValue(c.claim.value, best.claim.value)) : [];
-  const trustedCount = hit.claims.filter((c) => c.score >= 0.75).length;
-  const reasons = best ? [...best.evidence].filter((e) => e.points > 0).sort((a, b) => b.points - a.points).slice(0, 3) : [];
+  const all = [...hit.claims.map((c) => c.claim), ...hit.excluded.map((e) => e.claim)];
+  const searched = (["official", "teams", "sharepoint", "email"] as const)
+    .map((t) => ({ t, n: all.filter((c) => c.source.type === t).length }))
+    .filter((x) => x.n > 0)
+    .map((x) => `${x.n} ${CHANNEL[x.t]}`)
+    .join(" · ");
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="text-xs text-neutral-400">You asked · {clientName}</div>
@@ -66,7 +71,7 @@ export function Result({
         </button>
       </div>
 
-      {/* The answer */}
+      {/* The answer, and the three questions the brief asks: reliable, current, applies here */}
       {!best ? (
         <div className="rounded-3xl bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
           <div className="text-xs uppercase tracking-wide text-neutral-400">{fact.label}</div>
@@ -89,17 +94,26 @@ export function Result({
             <ScoreRing score={best.score} />
           </div>
 
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {checks(best, hit, clientName).map((c) => (
+              <div key={c.title} className="rounded-2xl bg-neutral-50 px-4 py-3">
+                <div className="flex items-center gap-1.5 text-xs font-medium">
+                  <span className={c.ok ? "text-[#1463ff]" : "text-[#c62a30]"}>{c.ok ? "✓" : "!"}</span>
+                  {c.title}
+                </div>
+                <div className="mt-0.5 text-sm text-neutral-600">{c.text}</div>
+              </div>
+            ))}
+          </div>
+
           <button
             onClick={() => setOpen(best.claim.id)}
-            className="group mt-6 block w-full rounded-2xl bg-neutral-50 p-4 text-left transition hover:bg-neutral-100"
+            className="group mt-3 block w-full rounded-2xl border border-neutral-100 p-4 text-left transition hover:bg-neutral-50"
           >
             <p className="text-[15px] leading-relaxed text-neutral-800">“{best.claim.text}”</p>
             <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500">
               <SourceIcon c={best.claim} />
-              <span className="truncate">
-                {best.claim.source.title}
-                {name(best.claim) && ` · ${name(best.claim)}`} · {best.claim.effectiveFrom ?? best.claim.date}
-              </span>
+              <span className="truncate">{best.claim.source.title}</span>
               <span className="ml-auto shrink-0 font-medium text-[#1463ff] group-hover:underline">Open document →</span>
             </div>
           </button>
@@ -119,64 +133,164 @@ export function Result({
         </div>
       )}
 
-      {/* How the brain decided */}
+      {/* Where the answer comes from: every source, grouped by what it did */}
       <div>
-        <h2 className="font-serif text-2xl">How the brain decided</h2>
-        <ol className="mt-4 flex flex-col gap-5">
-          <Step n={1} title={`Found ${hit.claims.length + hit.excluded.length} sources that mention ${fact.label.toLowerCase()}`}>
-            <span className="text-neutral-500">Official texts, SharePoint documents, Teams messages and emails.</span>
-          </Step>
-          {hit.excluded.length > 0 && (
-            <Step n={2} title={`Set aside ${hit.excluded.length} that don't apply to ${clientName}`}>
-              <Chips>
-                {hit.excluded.map((e) => (
-                  <Chip key={e.claim.id} onClick={() => setOpen(e.claim.id)} muted>
-                    {label(e.claim)} · {shortReason(e.reason).toLowerCase()}
-                  </Chip>
-                ))}
-              </Chips>
-            </Step>
-          )}
-          <Step n={hit.excluded.length ? 3 : 2} title={`Scored ${hit.excluded.length ? "the other" : "all"} ${hit.claims.length} on six trust layers`}>
-            <span className="text-neutral-500">
-              Who wrote it, how recent it is, who agrees, whether it matches the law, whether it fits this client, and user feedback.{" "}
-              {trustedCount} passed the 75% bar.
-            </span>
-          </Step>
-          {best && (
-            <Step n={hit.excluded.length ? 4 : 3} title={`Picked ${label(best.claim)}`}>
-              <span className="text-neutral-500">{reasons.map((r) => r.label).join(" · ")}</span>
-              {agree.length > 0 && (
-                <Chips>
-                  {agree.map((c) => (
-                    <Chip key={c.claim.id} onClick={() => setOpen(c.claim.id)} score={c.score}>
-                      Agrees · {label(c.claim)}
-                    </Chip>
-                  ))}
-                </Chips>
-              )}
-            </Step>
+        <h2 className="font-serif text-2xl">Where this comes from</h2>
+        <p className="mt-1 text-sm text-neutral-500">
+          The brain searched {all.length} sources ({searched}) and scored each one on who wrote it, how recent it is, who agrees, whether it
+          matches the law and whether it fits this case.
+        </p>
+
+        <div className="mt-6 flex flex-col gap-6">
+          {backing.length > 0 && (
+            <Group title="Backs this answer" hint={backing.length > 1 ? `${backing.length} sources agree` : undefined}>
+              {backing.map((c) => (
+                <SourceRow key={c.claim.id} claim={c.claim} score={c.score} name={name(c.claim)} onOpen={() => setOpen(c.claim.id)} />
+              ))}
+            </Group>
           )}
           {disagree.length > 0 && (
-            <Step n="!" title={`${disagree.length} source${disagree.length > 1 ? "s" : ""} said something else`} warn>
-              <Chips>
-                {disagree.map((c) => (
-                  <Chip key={c.claim.id} onClick={() => setOpen(c.claim.id)} score={c.score}>
-                    {c.claim.value} · {label(c.claim)} · {why(c, best!)}
-                  </Chip>
-                ))}
-              </Chips>
-            </Step>
+            <Group title="Says something else" hint={disagreeHint(status, disagree, best!)} warn>
+              {disagree.map((c) => (
+                <SourceRow
+                  key={c.claim.id}
+                  claim={c.claim}
+                  score={c.score}
+                  name={name(c.claim)}
+                  value={c.claim.value}
+                  reason={why(c, best!)}
+                  onOpen={() => setOpen(c.claim.id)}
+                />
+              ))}
+            </Group>
           )}
-        </ol>
-        <button onClick={() => setShowSorting(!showSorting)} className="mt-6 text-xs text-neutral-500 hover:text-neutral-900">
-          {showSorting ? "Hide the sorting ▴" : "Show how the documents were sorted ▾"}
+          {hit.excluded.length > 0 && (
+            <Group title={`Doesn't apply to ${clientName}`} hint={`${hit.excluded.length} set aside`}>
+              {showExcluded ? (
+                hit.excluded.map((e) => (
+                  <SourceRow
+                    key={e.claim.id}
+                    claim={e.claim}
+                    name={name(e.claim)}
+                    value={e.claim.value}
+                    reason={shortReason(e.reason).toLowerCase()}
+                    onOpen={() => setOpen(e.claim.id)}
+                    muted
+                  />
+                ))
+              ) : (
+                <button onClick={() => setShowExcluded(true)} className="px-3 py-2 text-left text-sm text-neutral-500 hover:text-neutral-900">
+                  Show them ▾
+                </button>
+              )}
+            </Group>
+          )}
+        </div>
+
+        <button onClick={() => setShowSorting(!showSorting)} className="mt-8 text-xs text-neutral-400 hover:text-neutral-900">
+          {showSorting ? "Hide the sorting ▴" : "Replay how the documents were sorted ▾"}
         </button>
         {showSorting && <div className="mt-4">{sorting}</div>}
       </div>
 
       {open && <DocViewer key={open} id={open} hit={hit} onClose={() => setOpen(null)} onOpen={setOpen} onVote={onVote} />}
     </div>
+  );
+}
+
+function disagreeHint(status: string, disagree: ScoredClaim[], best: ScoredClaim) {
+  if (status === "conflict") return "Experts disagree. One of them should settle this.";
+  if (disagree.every((c) => SPECIFIC[c.relevance] < SPECIFIC[best.relevance])) return "General rules that this client's own agreement overrides.";
+  return "Outdated or unverified. The owners should fix these.";
+}
+
+// Reliable? Current? Applies here? Answered from the best claim's own evidence.
+function checks(best: ScoredClaim, hit: Hit, clientName: string) {
+  const c = best.claim;
+  const author = c.author ? hit.people[c.author] : undefined;
+  const thumbs = best.evidence.find((e) => e.layer === "corroboration" && e.points > 0);
+  const oldRule = best.evidence.some((e) => e.tag === "Old rule");
+  const age = best.evidence.find((e) => e.layer === "freshness" && e.tag.endsWith("old"));
+  return [
+    {
+      title: "Reliable",
+      ok: c.source.type === "official" || author?.role === "expert" || !!thumbs,
+      text:
+        c.source.type === "official"
+          ? "Official publication"
+          : author?.role === "expert"
+            ? `${author.name}, expert`
+            : `${author?.name ?? "Unknown"}${thumbs ? `, ${thumbs.tag}` : ", not verified"}`,
+    },
+    {
+      title: "Current",
+      ok: !oldRule && (!age || age.points > -1.5),
+      text: c.effectiveFrom ? `In force since ${c.effectiveFrom}` : `Written ${c.date}${age ? ` (${age.tag})` : ""}`,
+    },
+    {
+      title: "Applies here",
+      ok: true,
+      text:
+        best.relevance === "client"
+          ? `${clientName}'s own agreement`
+          : best.relevance === "sector"
+            ? `${c.scope.country} · PC ${c.scope.pc}`
+            : c.scope.country === "NL"
+              ? "The Netherlands"
+              : "All of Belgium",
+    },
+  ];
+}
+
+function Group({ title, hint, warn, children }: { title: string; hint?: string; warn?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-baseline gap-2">
+        <span className={`text-sm font-medium ${warn ? "text-[#9a6400]" : ""}`}>{title}</span>
+        {hint && <span className="text-xs text-neutral-400">{hint}</span>}
+      </div>
+      <div className="flex flex-col divide-y divide-neutral-100 overflow-hidden rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SourceRow({
+  claim,
+  score,
+  name,
+  value,
+  reason,
+  onOpen,
+  muted,
+}: {
+  claim: Claim;
+  score?: number;
+  name?: string;
+  value?: string;
+  reason?: string;
+  onOpen: () => void;
+  muted?: boolean;
+}) {
+  return (
+    <button onClick={onOpen} className={`flex items-center gap-3 px-4 py-3 text-left transition hover:bg-neutral-50 ${muted ? "opacity-60" : ""}`}>
+      <SourceIcon c={claim} />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium">{claim.source.title}</div>
+        <div className="truncate text-xs text-neutral-500">
+          {[CHANNEL[claim.source.type], name, claim.effectiveFrom ?? claim.date].filter(Boolean).join(" · ")}
+          {reason && <span className="text-[#9a6400]"> · {reason}</span>}
+        </div>
+      </div>
+      {value && <span className="shrink-0 text-sm text-neutral-700">{value}</span>}
+      {score !== undefined && (
+        <span className="w-11 shrink-0 text-right text-sm font-medium tabular-nums" style={{ color: color(score) }}>
+          {pct(score)}%
+        </span>
+      )}
+      <span className="shrink-0 text-neutral-300">›</span>
+    </button>
   );
 }
 
@@ -188,23 +302,6 @@ function why(c: ScoredClaim, best: ScoredClaim) {
   return neg ? neg.tag.toLowerCase() : "less support";
 }
 
-function Step({ n, title, warn, children }: { n: number | string; title: string; warn?: boolean; children?: React.ReactNode }) {
-  return (
-    <li className="flex gap-4">
-      <span
-        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-          warn ? "bg-[#fff4dc] text-[#9a6400]" : "bg-white text-neutral-700 shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
-        }`}
-      >
-        {n}
-      </span>
-      <div className="min-w-0 flex-1 text-sm">
-        <div className="font-medium">{title}</div>
-        <div className="mt-1 leading-relaxed">{children}</div>
-      </div>
-    </li>
-  );
-}
 
 const Chips = ({ children }: { children: React.ReactNode }) => <div className="mt-2 flex flex-wrap gap-1.5">{children}</div>;
 
