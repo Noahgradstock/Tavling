@@ -3,7 +3,7 @@
 Team Aleida.ai (Ilke Seynaeve, Isak Andersson, Noa Gradstock) · Tectonic Hackathon 2026 · SD Worx challenge "Unlock the Knowledge Within"
 
 - **Live demo:** https://tavling-eight.vercel.app
-- **Repository:** https://github.com/Noahgradstock/Tavling
+- **Repository:** https://github.com/Noahgradstock/company-brain
 
 A payroll consultant gets an urgent customer question. The answer exists, but it is spread across a policy, an old manual, a Dutch guide, a Teams thread, a newsletter and a draft email, and they disagree. This proof of concept answers the question **and shows why each source can or cannot be trusted**, so the consultant goes from "I found something" to "I understand why I can rely on it".
 
