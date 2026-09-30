@@ -7,7 +7,6 @@ import { cardsOf, seg, useTimeline } from "@/lib/demo-shared";
 import SearchStage, { ScanChips } from "./demo";
 import Funnel, { funnelStage } from "./funnel";
 import { AnswerCard, ClaimPanel } from "./answer";
-import { Connectors, PrivacyNote, type Privacy } from "./extras";
 
 // DEMO ONLY: who is giving feedback. Replace with the signed-in user.
 const DEMO_USER = "sofie";
@@ -23,8 +22,6 @@ const SUGGESTIONS = [
   { label: "Holiday pay", q: "How much holiday pay do we owe?" },
 ];
 const STEPS = ["Ask", "Search", "Documents", "Criteria", "Score", "Decide"];
-// Where each step sits on the timeline, so a finished run can be taken apart step by step.
-const STEP_AT = [0, SPLIT * 0.3, SPLIT * 0.97, SPLIT + (1 - SPLIT) * 0.09, SPLIT + (1 - SPLIT) * 0.5, 1];
 
 export default function Ask() {
   const [question, setQuestion] = useState(customer.question);
@@ -34,14 +31,13 @@ export default function Ask() {
   const [loading, setLoading] = useState(false);
   const [run, setRun] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
-  const [p, skip, seek] = useTimeline(run, DURATION);
+  const [p, skip] = useTimeline(run, DURATION);
 
   useEffect(() => {
     fetch("/api/trust/meta").then((r) => r.json()).then((m) => setClients(m.clients));
   }, []);
 
   const hit = result?.matched ? result : null;
-  const privacy = (result as { privacy?: Privacy } | null)?.privacy;
   const cards = useMemo(() => (hit ? cardsOf(hit) : []), [hit]);
   const done = !!hit && p >= 1;
   const qFunnel = seg(p, SPLIT, 1);
@@ -87,17 +83,10 @@ export default function Ask() {
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 px-4 py-10 text-[#161616]">
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-[0.2em]">
         {STEPS.map((l, i) => (
-          <button
-            key={l}
-            type="button"
-            disabled={!hit}
-            onClick={() => seek(STEP_AT[i])}
-            title={hit ? `Show step ${i + 1}` : undefined}
-            className={`flex items-center gap-1.5 uppercase transition-colors enabled:hover:text-[#1463ff] ${i === step ? "text-[#161616]" : "text-neutral-400"}`}
-          >
+          <span key={l} className={`flex items-center gap-1.5 transition-colors ${i === step ? "text-[#161616]" : "text-neutral-400"}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${i <= step ? "bg-[#1463ff]" : "bg-neutral-300"}`} />
             0{i + 1} {l}
-          </button>
+          </span>
         ))}
       </div>
 
@@ -170,7 +159,6 @@ export default function Ask() {
             </button>
           </div>
         </form>
-        {privacy && <PrivacyNote privacy={privacy} />}
 
         <div className="mt-4">
           {!hit || p < SPLIT ? (
@@ -202,9 +190,8 @@ export default function Ask() {
           ) : (
             <AnswerCard hit={hit} onVote={vote} onSelect={setSelected} />
           ))}
-        {!result && !loading && <Connectors />}
         {!result && !loading && (
-          <p className="mt-3 text-center text-xs text-neutral-500">
+          <p className="text-center text-xs text-neutral-500">
             Ask a question. The brain finds every source that mentions it, sets aside what doesn&apos;t apply to this client, scores the rest
             in six open layers, and tells you which one to trust.
           </p>
