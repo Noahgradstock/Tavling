@@ -55,7 +55,7 @@ export default function Brain() {
   const selectedSource = sources.find((s) => s.id === selected) ?? null;
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-[#f6f6f5] text-[#161616]">
+    <div className="flex flex-col text-[#161616]">
       <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-10">
         <QuestionCard phase={phase} onAsk={ask} mode={mode} />
 
