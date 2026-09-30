@@ -41,6 +41,8 @@ const LAWS: DemoSource[] = [
 ];
 
 const sources: DemoSource[] = [LAWS[0], LAWS[1], ...internal];
+// Only the legal texts carry a flag, so they stand out from internal knowledge.
+const isLaw = (s: DemoSource) => LAWS.includes(s);
 
 // How each source looks as a document, and the sentence the scanner picks out.
 const DOCS: Record<string, { file: string; highlight: string }> = {
@@ -280,7 +282,7 @@ function Graph({ search }: { search: number }) {
             style={{ left: `${(n.x / GW) * 100}%`, top: `${(n.y / GH) * 100}%` }}
           >
             <Ring v={r} />
-            <Flag country={s.country} />
+            {isLaw(s) && <Flag country={s.country} />}
             {s.short}
           </div>
         );
@@ -341,7 +343,7 @@ function Page({ source: s, i, docsIn, scan }: { source: DemoSource; i: number; d
       <div className="flex items-center justify-between border-b border-black/10 pb-1 font-mono text-[7px] uppercase tracking-widest text-neutral-400">
         <span className="truncate">{s.channel}</span>
         <span className="flex shrink-0 items-center gap-1">
-          <Flag country={s.country} size={9} />
+          {isLaw(s) ? <Flag country={s.country} size={9} /> : `${s.country} ·`}
           {s.date.slice(0, 7)}
         </span>
       </div>
