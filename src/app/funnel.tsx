@@ -2,6 +2,7 @@
 
 import { STATUS, type ScoredClaim } from "@/trust-engine";
 import { color, Flag, pct, PdfIcon, seg, shortReason, type DocCard, type Hit } from "@/lib/demo-shared";
+import { DocsLogo, OutlookLogo, TeamsLogo } from "./logos";
 
 // Trust funnel: the real sources for this question move left to right through the trust engine's
 // six layers and get fewer. `q` runs 0 → 1.
@@ -183,7 +184,10 @@ function Card({
   const evidence = sc?.evidence.filter((e) => shownLayers.includes(e.layer)) ?? [];
   // Score builds up layer by layer; after the last layer the engine's capped score is final.
   const score = !sc || layers === 0 ? null : layers >= 6 ? sc.score : sigmoid(evidence.reduce((sum, e) => sum + e.points, 0));
-  const icon = s.official ? <Flag country={s.country} size={10} /> : <PdfIcon />;
+  const logo = s.channel === "Teams" ? <TeamsLogo /> : s.channel === "Email" ? <OutlookLogo /> : s.channel === "SharePoint" ? <DocsLogo /> : <PdfIcon />;
+  const icon = s.official ? <Flag country={s.country} size={10} /> : <span className="flex shrink-0 [&>svg]:h-4 [&>svg]:w-4">{logo}</span>;
+  // Thumbs-up from colleagues on this message, e.g. an expert confirming it in Teams.
+  const thumbs = sc?.claim.reactions?.length ?? 0;
   const compact = box.height < 44;
 
   return (
@@ -226,6 +230,7 @@ function Card({
           <div className="flex items-center gap-1.5">
             {icon}
             <span className="truncate text-[11px] font-medium">{s.short}</span>
+            {thumbs > 0 && <span className="shrink-0 text-[10px] text-neutral-500">👍 {thumbs}</span>}
             {place.mode === "scoring" && !compact && (
               <span className="ml-1 hidden truncate font-signature text-[13px] leading-none text-[#1f3a8a] sm:inline">{s.signer.name}</span>
             )}

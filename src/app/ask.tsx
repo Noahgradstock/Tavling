@@ -12,7 +12,7 @@ import { Result } from "./result";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
-const STEP_MS = [4_000, 10_000, 4_000, 4_000, 4_000, 4_000, 300]; // each step plays on its own; reading the documents takes longest…
+const STEP_MS = [4_000, 12_000, 6_000, 9_000, 6_000, 5_000, 300]; // each step plays on its own; reading and scoring take longest…
 const PAUSE_MS = 1_000; // …then holds briefly before the next one starts
 const CONNECT = 0.16; // first: search the connected systems
 const SCAN = 0.42; // then scan the documents, then sort them
@@ -299,6 +299,16 @@ function Thinking({ p, loading, hit, n }: { p: number; loading: boolean; hit: As
             ? `${h.claims.filter((c) => c.score >= 0.75).length} sources pass the trust bar`
             : "Choosing the answer";
   const scanning = !!h && p >= CONNECT && p < SCAN;
+  // One short line on what the funnel is doing, so every step explains itself.
+  const funnelNote = !h || p < SCAN
+    ? null
+    : stage === 0
+      ? "First, sources for another country, sector or client are set aside."
+      : stage === 1
+        ? "Each remaining source is scored on six criteria for relevance and usefulness."
+        : stage === 2
+          ? "Only sources scoring 75% or more stay. The rest are set aside, with the reason."
+          : "The most trustworthy source becomes the answer. Sources that agree back it up.";
   return (
     <div>
       <div className="flex items-center gap-3">
@@ -309,6 +319,7 @@ function Thinking({ p, loading, hit, n }: { p: number; loading: boolean; hit: As
         <span className="font-serif text-2xl sm:text-3xl">{text}</span>
       </div>
       {scanning && h && <ScanCriteria keywords={h.fact.keywords} />}
+      {funnelNote && <p className="mt-2 pl-[22px] text-sm text-neutral-500">{funnelNote}</p>}
     </div>
   );
 }
