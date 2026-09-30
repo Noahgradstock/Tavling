@@ -2,11 +2,15 @@ import type { Fact } from "@/trust-engine";
 
 // Gemini only maps a free-text question to one known topic. It never scores: the trust engine
 // stays deterministic. Returns null (keyword fallback) when no key is set or the call fails.
-const MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.1-flash-lite"];
+// Fastest first: routing to one of a few topics is an easy task.
+const MODELS = ["gemini-3.1-flash-lite", "gemini-3.7-flash"];
+const cache = new Map<string, string | null>();
 
 export async function matchFactWithGemini(question: string, facts: Fact[]): Promise<string | null> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
+  const cacheKey = question.trim().toLowerCase();
+  if (cache.has(cacheKey)) return cache.get(cacheKey)!;
 
   const keys = [...facts.map((f) => f.key), "none"];
   const system =
@@ -19,7 +23,7 @@ export async function matchFactWithGemini(question: string, facts: Fact[]): Prom
     fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": key },
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(6_000),
       body: JSON.stringify({
         model,
         system_instruction: system,
@@ -40,7 +44,9 @@ export async function matchFactWithGemini(question: string, facts: Fact[]): Prom
     const output = (data?.steps ?? []).findLast((s: { type?: string }) => s.type === "model_output");
     const text: string | undefined = output?.content?.find((c: { type?: string }) => c.type === "text")?.text;
     const factKey = text ? JSON.parse(text).factKey : null;
-    return typeof factKey === "string" && facts.some((f) => f.key === factKey) ? factKey : null;
+    const match = typeof factKey === "string" && facts.some((f) => f.key === factKey) ? factKey : null;
+    cache.set(cacheKey, match);
+    return match;
   } catch (err) {
     console.error("Gemini topic match failed, using keywords:", err);
     return null;

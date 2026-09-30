@@ -1,98 +1,95 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { sources as internal, type Source } from "@/lib/knowledge";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { AskResult, Claim, Person } from "@/trust-engine";
 
-// Scroll drives the whole demo: 0 → 1 across a tall section while the stage stays pinned.
+export type Hit = Extract<AskResult, { matched: true }>;
+
 export const clamp = (x: number) => Math.min(1, Math.max(0, x));
 export const seg = (p: number, a: number, b: number) => clamp((p - a) / (b - a));
+export const pct = (n: number) => Math.round(n * 100);
+export const color = (s: number) => (s >= 0.75 ? "#1463ff" : s >= 0.5 ? "#e39a0b" : "#e5484d");
 
-export type Country = "BE" | "NL" | "EU";
-export type DemoSource = Omit<Source, "country" | "channel"> & { country: Country; channel: string };
+export const CHANNEL = { official: "Official", teams: "Teams", sharepoint: "SharePoint", email: "Email" } as const;
+const EXT = { official: "pdf", teams: "json", sharepoint: "docx", email: "eml" } as const;
 
-// Official legal texts the brain also searches (unofficial English wording for the demo).
-const LAWS: DemoSource[] = [
-  {
-    id: "eu-883",
-    title: "Regulation (EC) No 883/2004 – coordination of social security systems, Art. 11",
-    short: "EU Reg. 883/2004",
-    channel: "EUR-Lex",
-    date: "2004-04-29",
-    owner: "European Union",
-    ownerActive: true,
-    verifiedBy: "Official Journal of the EU",
-    country: "EU",
-    status: "final",
-    text: `Persons to whom this Regulation applies shall be subject to the legislation of a single Member State only. A person pursuing an activity as an employed person in a Member State shall be subject to the legislation of that Member State. Sickness benefits in cash are provided by the competent institution in accordance with the legislation it applies.`,
-  },
-  {
-    id: "be-law-1978",
-    title: "Law of 3 July 1978 on employment contracts – guaranteed salary, Art. 70",
-    short: "BE Law 3 July 1978",
-    channel: "Belgian Official Journal",
-    date: "2026-01-01",
-    owner: "FPS Employment",
-    ownerActive: true,
-    verifiedBy: "Belgian Official Journal",
-    country: "BE",
-    status: "final",
-    text: `An employee who is unable to work because of illness keeps the right to their normal salary during the first 30 days of incapacity. If a new incapacity starts within 8 weeks after the end of a previous one, it is considered a continuation: guaranteed salary is only due for the days not yet paid. Unless the employee proves a different illness. (Consolidated version, in force from 1 January 2026.)`,
-  },
-];
-
-export const sources: DemoSource[] = [LAWS[0], LAWS[1], ...internal];
-// Only the legal texts carry a flag, so they stand out from internal knowledge.
-export const isLaw = (s: DemoSource) => LAWS.includes(s);
-
-// Who wrote or signed each document (roles match the trust engine's people).
-export const SIGNERS: Record<string, { name: string; role: string }> = {
-  "eu-883": { name: "European Parliament & Council", role: "Official" },
-  "be-law-1978": { name: "FPS Employment", role: "Official" },
-  "policy-2026": { name: "An Peeters", role: "Expert · Legal Payroll BE" },
-  "manual-2023": { name: "Koen Maes", role: "Left the company" },
-  "nl-guide": { name: "Sanne de Vries", role: "Expert · Legal Payroll NL" },
-  "teams-tom": { name: "Tom Claes", role: "New hire" },
-  "faq-solidarity": { name: "SD Worx Communications", role: "Communications" },
-  "draft-email": { name: "An Peeters", role: "Expert" },
+// How one engine claim looks as a document card in the visualization.
+export type DocCard = {
+  id: string;
+  short: string;
+  title: string;
+  channel: string;
+  file: string;
+  country: string;
+  date: string;
+  text: string;
+  highlight: string;
+  official: boolean;
+  signer: { name: string; role: string };
 };
 
-// How each source looks as a document, and the sentence the scanner picks out.
-export const DOCS: Record<string, { file: string; highlight: string }> = {
-  "eu-883": { file: "EUR-Lex_32004R0883.pdf", highlight: "subject to the legislation of that Member State" },
-  "be-law-1978": { file: "BE_Law_1978_Art70_EN.pdf", highlight: "within 8 weeks" },
-  "policy-2026": { file: "BE_Sick_Leave_Policy_2026.pdf", highlight: "extended from 14 days to 8 weeks" },
-  "manual-2023": { file: "Payroll_Manual_BE_v4.pdf", highlight: "more than 14 days after returning to work" },
-  "nl-guide": { file: "Ziekteverzuim_NL.pdf", highlight: "within 4 weeks are added together" },
-  "teams-tom": { file: "Teams_payroll-be_export.pdf", highlight: "relapse is still 14 days" },
-  "faq-solidarity": { file: "Newsletter_Solidarity_2026.pdf", highlight: "at least 50 employees" },
-  "draft-email": { file: "Legal_Relapse_DRAFT.pdf", highlight: "DRAFT – not voted yet" },
-};
+export function toCard(c: Claim, people: Record<string, Person>): DocCard {
+  const p = c.author ? people[c.author] : undefined;
+  const first = p?.name.split(" ")[0];
+  const role = !p
+    ? "Official"
+    : p.left
+      ? "Left the company"
+      : p.role === "expert"
+        ? `Expert · ${p.team}`
+        : p.role === "new"
+          ? "New hire"
+          : p.team;
+  return {
+    id: c.id,
+    short: c.source.type === "teams" ? `Teams · ${first}` : c.source.title,
+    title: c.source.title,
+    channel: CHANNEL[c.source.type],
+    file: `${c.source.title.replace(/[^\p{L}\p{N}]+/gu, "_").replace(/^_|_$/g, "").slice(0, 26)}.${EXT[c.source.type]}`,
+    country: c.scope.country,
+    date: c.effectiveFrom ?? c.date,
+    text: c.text,
+    // The scanner highlights the value where it appears in the text.
+    highlight: c.text.toLowerCase().includes(c.value.toLowerCase()) ? c.value : "",
+    official: c.source.type === "official",
+    signer: { name: p?.name ?? "Official publication", role },
+  };
+}
 
-export function useScrollProgress<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
+// Relevant claims first (best score first), then the ones that don't apply. Max 8 fit the stage.
+export function cardsOf(hit: Hit): DocCard[] {
+  return [...hit.claims.map((c) => c.claim), ...hit.excluded.map((e) => e.claim)].slice(0, 8).map((c) => toCard(c, hit.people));
+}
+
+export const shortReason = (reason: string) =>
+  reason.startsWith("Applies to PC")
+    ? "Other sector"
+    : reason.startsWith("Applies to")
+      ? "Other country"
+      : reason.startsWith("Specific")
+        ? "Other client"
+        : "Reported not applicable";
+
+// Drives an animation from 0 to 1 over `duration` ms each time `run` changes. skip() jumps to the end.
+export function useTimeline(run: number, duration: number) {
   const [p, setP] = useState(0);
+  const raf = useRef(0);
   useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const el = ref.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      setP(clamp(-r.top / (r.height - window.innerHeight)));
+    if (!run) return;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const v = clamp((t - t0) / duration);
+      setP(v);
+      if (v < 1) raf.current = requestAnimationFrame(tick);
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      cancelAnimationFrame(raf);
-    };
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, [run, duration]);
+  const skip = useCallback(() => {
+    cancelAnimationFrame(raf.current);
+    setP(1);
   }, []);
-  return [ref, p] as const;
+  return [p, skip] as const;
 }
 
 export function PdfIcon() {
@@ -101,13 +98,13 @@ export function PdfIcon() {
       <path d="M2 0h8l6 6v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z" fill="#e5484d" />
       <path d="M10 0v4a2 2 0 0 0 2 2h4" fill="#ff9a9d" />
       <text x="8" y="15.5" textAnchor="middle" fontSize="4.6" fontWeight="700" fill="#fff">
-        PDF
+        DOC
       </text>
     </svg>
   );
 }
 
-export function Flag({ country, size = 12 }: { country: Country; size?: number }) {
+export function Flag({ country, size = 12 }: { country: string; size?: number }) {
   const w = Math.round(size * 1.4);
   return (
     <svg viewBox="0 0 21 15" width={w} height={size} className="shrink-0 overflow-hidden rounded-[2px] ring-1 ring-black/10" aria-label={country}>

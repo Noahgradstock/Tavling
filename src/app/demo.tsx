@@ -1,209 +1,146 @@
 "use client";
 
-import { customer } from "@/lib/knowledge";
-import { DOCS, Flag, PdfIcon, SIGNERS, isLaw, seg, sources, useScrollProgress, type DemoSource } from "@/lib/demo-shared";
+import { Flag, PdfIcon, seg, type DocCard } from "@/lib/demo-shared";
 
-const CONNECTORS = ["SharePoint", "Confluence", "Teams", "Outlook"];
+// Search stage: the brain reaches every source that mentions the question, then the sources
+// arrive as documents and get scanned. `q` runs 0 → 1; `cards` are the real sources for this question.
 
 // Graph geometry in a 600x420 space: sources sit on an ellipse around the brain.
 const GW = 600;
 const GH = 420;
-const ANGLES = [-90, -45, 0, 45, 90, 135, 180, 225];
 const R = 175;
 const at = (angle: number, r: number) => ({
   x: GW / 2 + r * 1.23 * Math.cos((angle * Math.PI) / 180),
   y: GH / 2 + r * 0.77 * Math.sin((angle * Math.PI) / 180),
 });
+const angleOf = (i: number, n: number) => -90 + (i * 360) / n;
 const STAGGER = 0.07;
 
-export default function Demo() {
-  const [ref, p] = useScrollProgress<HTMLDivElement>();
-
-  const typed = seg(p, 0.03, 0.22);
-  const sent = p > 0.24;
-  const graphIn = seg(p, 0.25, 0.31);
-  const search = seg(p, 0.31, 0.56);
-  const graphOut = seg(p, 0.58, 0.64);
-  const docsIn = seg(p, 0.6, 0.74);
-  const scan = seg(p, 0.74, 0.97);
-
-  const step = p < 0.25 ? 0 : p < 0.6 ? 1 : 2;
-  const found = sources.filter((_, i) => reach(search, i) >= 1).length;
-
-  return (
-    <div ref={ref} className="relative h-[520vh]">
-      <div className="sticky top-0 flex h-screen flex-col items-center justify-center px-4">
-        <div className="flex w-full max-w-2xl flex-col gap-3">
-          <Steps step={step} />
-
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#e9e8e6] to-[#dddcd9] p-4 sm:p-6">
-            <Prompt typed={typed} sent={sent} docsIn={docsIn} scan={scan} />
-
-            <div className="relative mt-4 h-[380px]">
-              {/* Scene 1: the company's knowledge, waiting to be searched */}
-              <div
-                className="absolute inset-0 overflow-hidden rounded-2xl"
-                style={{ opacity: 1 - graphIn, transform: `scale(${1 - 0.05 * graphIn})` }}
-              >
-                <div className="absolute inset-0 flex items-stretch justify-between px-2" aria-hidden>
-                  {Array.from({ length: 72 }, (_, i) => (
-                    <span
-                      key={i}
-                      className="barcode-bar"
-                      style={{
-                        width: 1 + ((i * 7) % 4),
-                        background: i % 11 === 3 ? "#1463ff" : "#161616",
-                        animationDelay: `${(i % 18) * 0.11}s`,
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="absolute inset-x-0 bottom-3 flex justify-center">
-                  <span className="rounded-full bg-[#e3e2df] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-600">
-                    12,480 documents · 4 connected sources
-                  </span>
-                </div>
-              </div>
-
-              {/* Scene 2: the company brain searches every connected source */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  opacity: graphIn * (1 - graphOut),
-                  transform: `scale(${0.94 + 0.06 * graphIn - 0.08 * graphOut})`,
-                  pointerEvents: "none",
-                }}
-              >
-                <Graph search={search} />
-                <div className="absolute inset-x-0 bottom-0 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
-                  {search < 1 ? `Searching company knowledge and law · ${found}/${sources.length}` : `${sources.length} sources found`}
-                </div>
-              </div>
-
-              {/* Scene 3: the sources arrive as documents and get scanned */}
-              <div className="absolute inset-0 grid grid-cols-4 gap-2.5" style={{ opacity: docsIn > 0 ? 1 : 0 }}>
-                {sources.map((s, i) => (
-                  <Page key={s.id} source={s} i={i} docsIn={docsIn} scan={scan} />
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="text-center text-[11px] text-neutral-400">{p < 0.02 ? "Scroll to run the demo ↓" : " "}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+export const timing = (q: number) => ({
+  graphIn: seg(q, 0, 0.08),
+  search: seg(q, 0.08, 0.45),
+  graphOut: seg(q, 0.5, 0.58),
+  docsIn: seg(q, 0.55, 0.72),
+  scan: seg(q, 0.72, 1),
+});
 
 // Each source is reached by the search in turn.
 const reach = (search: number, i: number) => seg(search, i * STAGGER, i * STAGGER + 0.5);
 const scanOf = (scan: number, i: number) => seg(scan, i * STAGGER, i * STAGGER + 0.45);
 
-function Steps({ step }: { step: number }) {
-  const labels = ["Ask", "Search", "Documents"];
-  return (
-    <div className="flex items-center justify-center gap-4 font-mono text-[10px] uppercase tracking-[0.2em]">
-      {labels.map((l, i) => (
-        <span key={l} className={`flex items-center gap-1.5 transition-colors ${i === step ? "text-[#161616]" : "text-neutral-400"}`}>
-          <span className={`h-1.5 w-1.5 rounded-full ${i <= step ? "bg-[#1463ff]" : "bg-neutral-300"}`} />
-          0{i + 1} {l}
-        </span>
-      ))}
-    </div>
-  );
-}
+export default function SearchStage({ cards, q, loading }: { cards: DocCard[]; q: number; loading: boolean }) {
+  const { graphIn, search, graphOut, docsIn, scan } = timing(q);
+  const found = cards.filter((_, i) => reach(search, i) >= 1).length;
 
-function Prompt({ typed, sent, docsIn, scan }: { typed: number; sent: boolean; docsIn: number; scan: number }) {
-  const text = customer.question.slice(0, Math.round(customer.question.length * typed));
   return (
-    <div className="rounded-2xl bg-white p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.18)]">
-      {docsIn > 0 && (
-        <div className="mb-2 flex gap-1.5 overflow-hidden">
-          {sources.map((s, i) => {
-            const v = scanOf(scan, i);
-            return (
-              <div
-                key={s.id}
-                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-neutral-100 px-2 py-1 transition-opacity"
-                style={{ opacity: seg(docsIn, i * STAGGER, i * STAGGER + 0.4) }}
-              >
-                <PdfIcon />
-                <div className="leading-tight">
-                  <div className="max-w-[88px] truncate text-[9px] font-medium">{DOCS[s.id].file}</div>
-                  <div className="text-[8px] text-neutral-400">
-                    {v <= 0 ? "PDF" : v < 1 ? `Scanning ${Math.round(v * 100)}%` : "Scanned ✓"}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+    <div className="relative h-[380px]">
+      {/* Scene 1: the company's knowledge, waiting to be searched */}
+      <div className="absolute inset-0 overflow-hidden rounded-2xl" style={{ opacity: 1 - graphIn, transform: `scale(${1 - 0.05 * graphIn})` }}>
+        <div className="absolute inset-0 flex items-stretch justify-between px-2" aria-hidden>
+          {Array.from({ length: 72 }, (_, i) => (
+            <span
+              key={i}
+              className="barcode-bar"
+              style={{
+                width: 1 + ((i * 7) % 4),
+                background: i % 11 === 3 ? "#1463ff" : "#161616",
+                animationDelay: `${(i % 18) * (loading ? 0.04 : 0.11)}s`,
+                animationDuration: loading ? "0.8s" : undefined,
+              }}
+            />
+          ))}
         </div>
-      )}
-      <div className="mb-1 flex items-center gap-2 text-[10px] text-neutral-400">
-        <span className="rounded-full bg-[#fff4dc] px-1.5 py-0.5 font-medium text-[#9a6400]">Customer question</span>
-        {customer.contact} · {customer.company}
-      </div>
-      <p className="min-h-[3.75rem] text-[13px] leading-relaxed">
-        {text}
-        {typed < 1 && <span className="ml-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 animate-pulse bg-[#1463ff]" />}
-      </p>
-      <div className="mt-2 flex items-center gap-1.5">
-        {CONNECTORS.map((c) => (
-          <span key={c} className="rounded-md border border-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-500">
-            {c}
+        <div className="absolute inset-x-0 bottom-3 flex justify-center">
+          <span className="rounded-full bg-[#e3e2df] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-600">
+            {loading ? "Understanding the question…" : "Company knowledge · SharePoint · Teams · Email · Law"}
           </span>
-        ))}
-        <span
-          className={`ml-auto flex h-6 w-6 items-center justify-center rounded-full text-xs text-white transition-colors ${
-            sent ? "bg-[#161616]" : "bg-neutral-300"
-          }`}
-        >
-          ↑
-        </span>
+        </div>
       </div>
+
+      {cards.length > 0 && (
+        <>
+          {/* Scene 2: the company brain searches every connected source */}
+          <div
+            className="absolute inset-0"
+            style={{
+              opacity: graphIn * (1 - graphOut),
+              transform: `scale(${0.94 + 0.06 * graphIn - 0.08 * graphOut})`,
+              pointerEvents: "none",
+            }}
+          >
+            <Graph cards={cards} search={search} />
+            <div className="absolute inset-x-0 bottom-0 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+              {search < 1 ? `Searching company knowledge and law · ${found}/${cards.length}` : `${cards.length} sources found`}
+            </div>
+          </div>
+
+          {/* Scene 3: the sources arrive as documents and get scanned */}
+          <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 gap-2.5" style={{ opacity: docsIn > 0 ? 1 : 0 }}>
+            {cards.map((c, i) => (
+              <Page key={c.id} card={c} i={i} n={cards.length} docsIn={docsIn} scan={scan} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-function Graph({ search }: { search: number }) {
+// File chips shown in the prompt while documents are scanned.
+export function ScanChips({ cards, q }: { cards: DocCard[]; q: number }) {
+  const { docsIn, scan } = timing(q);
+  if (docsIn <= 0) return null;
+  return (
+    <div className="mb-2 flex gap-1.5 overflow-hidden">
+      {cards.map((c, i) => {
+        const v = scanOf(scan, i);
+        return (
+          <div
+            key={c.id}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-neutral-100 px-2 py-1 transition-opacity"
+            style={{ opacity: seg(docsIn, i * STAGGER, i * STAGGER + 0.4) }}
+          >
+            <PdfIcon />
+            <div className="leading-tight">
+              <div className="max-w-[88px] truncate text-[9px] font-medium">{c.file}</div>
+              <div className="text-[8px] text-neutral-400">{v <= 0 ? c.channel : v < 1 ? `Scanning ${Math.round(v * 100)}%` : "Scanned ✓"}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Graph({ cards, search }: { cards: DocCard[]; search: number }) {
+  const n = cards.length;
   return (
     <div className="relative mx-auto h-full w-full max-w-[600px]">
       <svg viewBox={`0 0 ${GW} ${GH}`} className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
-        {sources.map((s, i) => {
-          const n = at(ANGLES[i], R);
+        {cards.map((s, i) => {
+          const p = at(angleOf(i, n), R);
           const r = reach(search, i);
           const c = { x: GW / 2, y: GH / 2 };
           return (
             <g key={s.id}>
-              <line x1={c.x} y1={c.y} x2={n.x} y2={n.y} stroke="#cfcdc9" strokeWidth={1.5} />
-              <line
-                x1={c.x}
-                y1={c.y}
-                x2={c.x + (n.x - c.x) * r}
-                y2={c.y + (n.y - c.y) * r}
-                stroke="#1463ff"
-                strokeOpacity={0.5}
-                strokeWidth={1.5}
-              />
-              {r > 0 && r < 1 && (
-                <circle cx={c.x + (n.x - c.x) * r} cy={c.y + (n.y - c.y) * r} r={4} fill="#1463ff" />
-              )}
+              <line x1={c.x} y1={c.y} x2={p.x} y2={p.y} stroke="#cfcdc9" strokeWidth={1.5} />
+              <line x1={c.x} y1={c.y} x2={c.x + (p.x - c.x) * r} y2={c.y + (p.y - c.y) * r} stroke="#1463ff" strokeOpacity={0.5} strokeWidth={1.5} />
+              {r > 0 && r < 1 && <circle cx={c.x + (p.x - c.x) * r} cy={c.y + (p.y - c.y) * r} r={4} fill="#1463ff" />}
             </g>
           );
         })}
       </svg>
-      {sources.map((s, i) => {
-        const n = at(ANGLES[i], R);
-        const r = reach(search, i);
+      {cards.map((s, i) => {
+        const p = at(angleOf(i, n), R);
         return (
           <div
             key={s.id}
-            className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-white py-1 pl-1.5 pr-3 text-[12px] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-            style={{ left: `${(n.x / GW) * 100}%`, top: `${(n.y / GH) * 100}%` }}
+            className="absolute flex max-w-[190px] -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-white py-1 pl-1.5 pr-3 text-[12px] font-medium shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+            style={{ left: `${(p.x / GW) * 100}%`, top: `${(p.y / GH) * 100}%` }}
           >
-            <Ring v={r} />
-            {isLaw(s) && <Flag country={s.country} />}
-            {s.short}
+            <Ring v={reach(search, i)} />
+            {s.official && <Flag country={s.country} />}
+            <span className="truncate">{s.short}</span>
           </div>
         );
       })}
@@ -224,7 +161,7 @@ function Ring({ v }: { v: number }) {
   const r = 10;
   const c = 2 * Math.PI * r;
   return (
-    <svg viewBox="0 0 28 28" className="h-4 w-4">
+    <svg viewBox="0 0 28 28" className="h-4 w-4 shrink-0">
       <circle cx="14" cy="14" r={r} fill="none" stroke="#e3e3e3" strokeWidth="3.5" />
       <circle
         cx="14"
@@ -242,15 +179,17 @@ function Ring({ v }: { v: number }) {
   );
 }
 
-function Page({ source: s, i, docsIn, scan }: { source: DemoSource; i: number; docsIn: number; scan: number }) {
+function Page({ card: s, i, n, docsIn, scan }: { card: DocCard; i: number; n: number; docsIn: number; scan: number }) {
   const inV = seg(docsIn, i * STAGGER, i * STAGGER + 0.5);
   const v = scanOf(scan, i);
-  const { highlight } = DOCS[s.id];
-  const [before, after] = s.text.split(highlight);
+  const idx = s.highlight ? s.text.toLowerCase().indexOf(s.highlight.toLowerCase()) : -1;
+  const before = idx >= 0 ? s.text.slice(0, idx) : s.text;
+  const mark = idx >= 0 ? s.text.slice(idx, idx + s.highlight.length) : "";
+  const after = idx >= 0 ? s.text.slice(idx + s.highlight.length) : "";
   // Pages fly in from the brain in the middle of the stage.
-  const n = at(ANGLES[i], R);
-  const dx = (GW / 2 - n.x) * 0.5 * (1 - inV);
-  const dy = (GH / 2 - n.y) * 0.5 * (1 - inV);
+  const p = at(angleOf(i, n), R);
+  const dx = (GW / 2 - p.x) * 0.5 * (1 - inV);
+  const dy = (GH / 2 - p.y) * 0.5 * (1 - inV);
 
   return (
     <div
@@ -263,36 +202,31 @@ function Page({ source: s, i, docsIn, scan }: { source: DemoSource; i: number; d
       <div className="flex items-center justify-between border-b border-black/10 pb-1 font-mono text-[7px] uppercase tracking-widest text-neutral-400">
         <span className="truncate">{s.channel}</span>
         <span className="flex shrink-0 items-center gap-1">
-          {isLaw(s) ? <Flag country={s.country} size={9} /> : `${s.country} ·`}
+          {s.official ? <Flag country={s.country} size={9} /> : `${s.country} ·`}
           {s.date.slice(0, 7)}
         </span>
       </div>
-      <div className="mt-1.5 font-serif text-[12px] leading-tight">{s.title}</div>
-      <p className="mt-1.5 line-clamp-[6] text-[7.5px] leading-[1.45] text-neutral-500">
+      <div className="mt-1.5 line-clamp-2 font-serif text-[12px] leading-tight">{s.title}</div>
+      <p className="mt-1.5 line-clamp-4 text-[8px] leading-[1.45] text-neutral-500">
         {before}
-        <mark
-          className="rounded-sm px-0.5 text-[#161616] transition-colors"
-          style={{ background: v >= 1 ? "#cfe0ff" : "transparent" }}
-        >
-          {highlight}
-        </mark>
+        {mark && (
+          <mark className="rounded-sm px-0.5 text-[#161616] transition-colors" style={{ background: v >= 1 ? "#cfe0ff" : "transparent" }}>
+            {mark}
+          </mark>
+        )}
         {after}
       </p>
       <div className="absolute inset-x-2.5 bottom-1.5 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <div className="-rotate-2 truncate font-signature text-[14px] leading-none text-[#1f3a8a]">{SIGNERS[s.id].name}</div>
-          <div className="mt-0.5 truncate border-t border-black/15 pt-0.5 text-[6.5px] text-neutral-400">{SIGNERS[s.id].role}</div>
+          <div className="-rotate-2 truncate font-signature text-[14px] leading-none text-[#1f3a8a]">{s.signer.name}</div>
+          <div className="mt-0.5 truncate border-t border-black/15 pt-0.5 text-[6.5px] text-neutral-400">{s.signer.role}</div>
         </div>
-        <span className="shrink-0 text-[7px] text-neutral-400">{s.status === "draft" ? "DRAFT" : "p. 1"}</span>
       </div>
       {/* Scanner sweep */}
       {v > 0 && v < 1 && (
         <>
           <div className="absolute inset-x-0 top-0 bg-[#1463ff]/[0.06]" style={{ height: `${v * 100}%` }} />
-          <div
-            className="absolute inset-x-0 h-[2px] bg-[#1463ff] shadow-[0_0_12px_2px_rgba(20,99,255,0.5)]"
-            style={{ top: `${v * 100}%` }}
-          />
+          <div className="absolute inset-x-0 h-[2px] bg-[#1463ff] shadow-[0_0_12px_2px_rgba(20,99,255,0.5)]" style={{ top: `${v * 100}%` }} />
         </>
       )}
     </div>

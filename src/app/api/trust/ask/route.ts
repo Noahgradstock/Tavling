@@ -1,4 +1,4 @@
-import { ask, parseContext } from "@/trust-engine";
+import { ask, matchFact, parseContext } from "@/trust-engine";
 import { matchFactWithGemini } from "@/lib/gemini-match";
 import { feedbackStore, kb, now, readJson } from "@/lib/trust-server";
 
@@ -8,6 +8,9 @@ export async function POST(request: Request) {
   const question = typeof body?.question === "string" ? body.question.slice(0, 500) : "";
   const ctx = parseContext(body?.context, kb);
   if (!question || !ctx) return Response.json({ error: "question and a valid context are required" }, { status: 400 });
-  const factKey = await matchFactWithGemini(question, kb.facts);
-  return Response.json({ ...ask(question, ctx, kb, feedbackStore.all(), now(), factKey), matchedBy: factKey ? "gemini" : "keywords" });
+  // Keywords are instant; Gemini handles free text and other languages when they find nothing.
+  const byKeywords = matchFact(question, kb.facts);
+  const factKey = byKeywords ? null : await matchFactWithGemini(question, kb.facts);
+  const matchedBy = byKeywords ? "keywords" : factKey ? "gemini" : "none";
+  return Response.json({ ...ask(question, ctx, kb, feedbackStore.all(), now(), factKey), matchedBy });
 }
