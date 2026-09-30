@@ -1,0 +1,61 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1723619520114",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-08-14T07:12:00.114Z",
+      "lastModifiedDateTime": "2026-08-14T07:12:00.114Z",
+      "subject": null,
+      "from": { "user": { "id": "u-pjacobs", "displayName": "Pieter Jacobs" } },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Quick question. Client has an employee who was sick for 5 weeks, back for 3 weeks, now sick again. Do we restart guaranteed salary or not?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1723619998203",
+          "replyToId": "1723619520114",
+          "createdDateTime": "2026-08-14T07:19:58.203Z",
+          "from": { "user": { "id": "u-smaes", "displayName": "Sofie Maes" } },
+          "body": { "contentType": "html", "content": "<p>Wasn't there something that changed in January?</p>" },
+          "attachments": [],
+          "reactions": []
+        },
+        {
+          "id": "1723620241877",
+          "replyToId": "1723619520114",
+          "createdDateTime": "2026-08-14T07:24:01.877Z",
+          "from": { "user": { "id": "u-tclaes", "displayName": "Tom Claes" } },
+          "body": {
+            "contentType": "html",
+            "content": "<p>relapse is still 14 days for white-collar, I checked last year. after that it's a new guaranteed salary period. see p.41 in the manual</p>"
+          },
+          "attachments": [
+            {
+              "id": "a1",
+              "contentType": "reference",
+              "contentUrl": "https://sdworx.sharepoint.com/sites/PayrollBE/Shared Documents/Manuals/Payroll_manual_BE_v4.pdf",
+              "name": "Payroll_manual_BE_v4.pdf"
+            }
+          ],
+          "reactions": [
+            { "reactionType": "like", "createdDateTime": "2026-08-14T07:25:10.000Z", "user": { "user": { "id": "u-pjacobs", "displayName": "Pieter Jacobs" } } }
+          ]
+        },
+        {
+          "id": "1723620377015",
+          "replyToId": "1723619520114",
+          "createdDateTime": "2026-08-14T07:26:17.015Z",
+          "from": { "user": { "id": "u-pjacobs", "displayName": "Pieter Jacobs" } },
+          "body": { "contentType": "html", "content": "<p>ok thanks, I'll restart the 30 days then</p>" },
+          "attachments": [],
+          "reactions": []
+        }
+      ]
+    }
+  ]
+}
