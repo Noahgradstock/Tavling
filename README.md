@@ -1,6 +1,6 @@
 # Company brain: trusted answers
 
-Team Aleida.ai · Tectonic Hackathon 2026 · SD Worx challenge "Unlock the Knowledge Within"
+Team Aleida.ai (Ilke Seynaeve, Isak Andersson, Noa Gradstock) · Tectonic Hackathon 2026 · SD Worx challenge "Unlock the Knowledge Within"
 
 - **Live demo:** https://tavling-eight.vercel.app
 - **Repository:** https://github.com/Noahgradstock/Tavling
