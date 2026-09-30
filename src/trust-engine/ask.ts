@@ -23,8 +23,16 @@ export function matchFact(question: string, facts: Fact[]): Fact | null {
   return best?.fact ?? null;
 }
 
-export function ask(question: string, ctx: Context, kb: KnowledgeBase, feedback: Feedback[] = [], now = new Date()): AskResult {
-  const fact = matchFact(question, kb.facts);
+// factKey: pass one when an LLM already picked the topic; otherwise keywords decide.
+export function ask(
+  question: string,
+  ctx: Context,
+  kb: KnowledgeBase,
+  feedback: Feedback[] = [],
+  now = new Date(),
+  factKey?: string | null,
+): AskResult {
+  const fact = (factKey && kb.facts.find((f) => f.key === factKey)) || matchFact(question, kb.facts);
   if (!fact) return { matched: false, message: "I couldn't match that to anything in the brain yet.", suggestions: kb.facts.map((f) => f.label) };
 
   const result = evaluateFact(fact, kb, ctx, feedback, now);

@@ -52,6 +52,12 @@ HTTP (Next.js routes in `src/app/api/trust/`):
 The home page (`src/app/brain.tsx`) asks through `/api/trust/ask` and the scroll story (`src/app/story.tsx`) replays
 the engine on the SD Worx case from the brief. Run the tests with `npm test`.
 
+## Gemini
+
+With `GEMINI_API_KEY` in `.env.local`, `/api/trust/ask` lets Gemini pick the topic for a free-text question
+(any language), see `src/lib/gemini-match.ts`. Gemini never scores. Without a key, keyword matching is used.
+The response says which one was used in `matchedBy`.
+
 ## Not done yet
 
 - Layer 0: LLM extraction of claims from real Teams exports and documents (claims are hand-written mock data)

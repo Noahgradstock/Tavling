@@ -1,0 +1,48 @@
+import type { Fact } from "@/trust-engine";
+
+// Gemini only maps a free-text question to one known topic. It never scores: the trust engine
+// stays deterministic. Returns null (keyword fallback) when no key is set or the call fails.
+const MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.1-flash-lite"];
+
+export async function matchFactWithGemini(question: string, facts: Fact[]): Promise<string | null> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return null;
+
+  const keys = [...facts.map((f) => f.key), "none"];
+  const system =
+    "You route HR and payroll questions from SD Worx consultants to one topic in a knowledge base. " +
+    'Answer with the single best topic key, or "none" if no topic fits. Questions may be in English, Dutch or French.';
+  const input = `Topics:\n${facts.map((f) => `- ${f.key}: ${f.label}`).join("\n")}\n\nQuestion: "${question}"`;
+  const schema = { type: "object", properties: { factKey: { type: "string", enum: keys } }, required: ["factKey"] };
+
+  const call = (model: string) =>
+    fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      signal: AbortSignal.timeout(8_000),
+      body: JSON.stringify({
+        model,
+        system_instruction: system,
+        input,
+        response_format: { type: "text", mime_type: "application/json", schema },
+      }),
+    });
+
+  try {
+    // Free tier is often overloaded (503/429), so fall through to other models.
+    let res = await call(MODELS[0]);
+    for (const model of MODELS.slice(1)) {
+      if (res.status !== 503 && res.status !== 429) break;
+      res = await call(model);
+    }
+    if (!res.ok) throw new Error(`Gemini ${res.status}`);
+    const data = await res.json();
+    const output = (data?.steps ?? []).findLast((s: { type?: string }) => s.type === "model_output");
+    const text: string | undefined = output?.content?.find((c: { type?: string }) => c.type === "text")?.text;
+    const factKey = text ? JSON.parse(text).factKey : null;
+    return typeof factKey === "string" && facts.some((f) => f.key === factKey) ? factKey : null;
+  } catch (err) {
+    console.error("Gemini topic match failed, using keywords:", err);
+    return null;
+  }
+}
