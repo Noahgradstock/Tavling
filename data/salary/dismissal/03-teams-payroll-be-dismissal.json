@@ -1,0 +1,63 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1788340000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-09-02T15:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-nora",
+          "displayName": "Nora Willems"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Client wants to dismiss someone with 5 years seniority, notice is 15 weeks I think?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1788341000002",
+          "replyToId": "1788340000001",
+          "messageType": "message",
+          "createdDateTime": "2026-09-02T15:52:00Z",
+          "from": {
+            "user": {
+              "id": "u-anna",
+              "displayName": "Anna De Smet"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Nora it is 18 weeks at 5 years of service. Check the official table before you answer the client.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-jan",
+                  "displayName": "Jan Wouters"
+                }
+              }
+            },
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-an",
+                  "displayName": "An Peeters"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

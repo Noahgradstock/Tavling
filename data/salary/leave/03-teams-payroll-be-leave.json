@@ -1,0 +1,24 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1781520000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-06-15T11:00:00Z",
+      "from": {
+        "user": {
+          "id": "u-emma",
+          "displayName": "Emma Bakker"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Maternity leave is 16 weeks, I just checked for a client.</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": []
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1771580000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-02-20T09:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-tom",
+          "displayName": "Tom Claes"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>employees can skip the sick note 2 times per year right?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1771581000002",
+          "replyToId": "1771580000001",
+          "messageType": "message",
+          "createdDateTime": "2026-02-20T09:48:00Z",
+          "from": {
+            "user": {
+              "id": "u-lotte",
+              "displayName": "Lotte Verbeke"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Tom it is 3 times per year, and only for employers with 50 or more employees.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-anna",
+                  "displayName": "Anna De Smet"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

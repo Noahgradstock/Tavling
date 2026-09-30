@@ -1,0 +1,34 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1775210000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-04-03T10:10:00Z",
+      "from": {
+        "user": {
+          "id": "u-pieter",
+          "displayName": "Pieter Jacobs"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>FYI the telework allowance max went up to €154.74 per month from April.</p>"
+      },
+      "attachments": [],
+      "reactions": [
+        {
+          "reactionType": "like",
+          "user": {
+            "user": {
+              "id": "u-an",
+              "displayName": "An Peeters"
+            }
+          }
+        }
+      ],
+      "replies": []
+    }
+  ]
+}

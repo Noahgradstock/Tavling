@@ -1,0 +1,24 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1779270000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-05-20T09:00:00Z",
+      "from": {
+        "user": {
+          "id": "u-pieter",
+          "displayName": "Pieter Jacobs"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Minimum wage check for a student client: €2,070.48 gross per month, correct?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": []
+    }
+  ]
+}

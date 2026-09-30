@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { mockKnowledgeBase } from "./mock";
-import type { Claim, KnowledgeBase, SourceType } from "./types";
+import type { Claim, Client, Fact, KnowledgeBase, Person, SourceType } from "./types";
 
 // Builds the knowledge base from the source files in data/salary. Server-only (reads files).
 // Topics without data files yet keep their mock claims.
@@ -75,7 +75,9 @@ function quote(fileText: string, value: string): string | null {
     .flatMap((para) => para.split(/(?<=[.!?])\s+(?=[A-Z0-9"“])/))
     .map((x) => x.replace(/\s+/g, " ").trim())
     .filter((x) => !/^\d+\.?$/.test(x)); // drop list numbers like "3."
-  const k = sentences.findIndex((x) => x.length > 8 && needle.test(norm(x)));
+  // Prefer the sentence with the full value ("3 times per year"), then the first token on its own.
+  let k = sentences.findIndex((x) => x.length > 8 && norm(x).includes(norm(value)));
+  if (k < 0) k = sentences.findIndex((x) => x.length > 8 && needle.test(norm(x)));
   if (k < 0) return null;
   const text = sentences[k];
   return text.length > 260 ? `${text.slice(0, 257)}…` : text;
@@ -108,10 +110,30 @@ export function readSource(claim: Claim): SourceDoc {
   return { kind: "text", file: claim.file, text: raw.replace(/<[^>]+>/g, "") };
 }
 
+type DataFile = {
+  claims?: DataClaim[];
+  testQuestions?: TestQuestion[];
+  facts?: Fact[];
+  people?: Record<string, Omit<Person, "id">>;
+  clients?: Record<string, Omit<Client, "id">>;
+};
+
+// Every file listed here adds claims, and optionally topics, people and clients.
+const SOURCE_FILES = ["sources.json", "sources-more.json"];
+
 export function loadDataKnowledgeBase(): { kb: KnowledgeBase; testQuestions: TestQuestion[] } {
-  const raw = JSON.parse(read("sources.json") || "{}") as { claims?: DataClaim[]; testQuestions?: TestQuestion[] };
+  const files = SOURCE_FILES.map((f) => JSON.parse(read(f) || "{}") as DataFile);
+  const raw = { claims: files.flatMap((f) => f.claims ?? []), testQuestions: files.flatMap((f) => f.testQuestions ?? []) };
+  const extraPeople = files.flatMap((f) => Object.entries(f.people ?? {}).map(([id, p]) => ({ id, ...p }) as Person));
+  const extraClients = files.flatMap((f) => Object.entries(f.clients ?? {}).map(([id, c]) => ({ id, ...c }) as Client));
+  const extraFacts = files.flatMap((f) => f.facts ?? []);
+  const merge = <T extends { id?: string; key?: string }>(base: T[], extra: T[]) => {
+    const k = (x: T) => x.id ?? x.key;
+    return [...base, ...extra.filter((e) => !base.some((b) => k(b) === k(e)))];
+  };
+  const allPeople = merge(mockKnowledgeBase.people, extraPeople);
   const mockById = new Map(mockKnowledgeBase.claims.map((c) => [c.id, c]));
-  const people = Object.fromEntries(mockKnowledgeBase.people.map((p) => [p.id, p]));
+  const people = Object.fromEntries(allPeople.map((p) => [p.id, p]));
 
   const fromData: Claim[] = (raw.claims ?? [])
     .filter((d) => d.value)
@@ -144,7 +166,12 @@ export function loadDataKnowledgeBase(): { kb: KnowledgeBase; testQuestions: Tes
     .map((c) => (SICK_LEAVE_FILES[c.id] ? { ...c, file: SICK_LEAVE_FILES[c.id] } : c));
 
   return {
-    kb: { ...mockKnowledgeBase, claims: [...fromData, ...fromMock] },
+    kb: {
+      facts: merge(mockKnowledgeBase.facts, extraFacts),
+      people: allPeople,
+      clients: merge(mockKnowledgeBase.clients, extraClients),
+      claims: [...fromData, ...fromMock],
+    },
     testQuestions: raw.testQuestions ?? [],
   };
 }

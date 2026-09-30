@@ -1,0 +1,53 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1781090000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-06-10T12:00:00Z",
+      "from": {
+        "user": {
+          "id": "u-sofie",
+          "displayName": "Sofie Maes"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Summer jobs: students can do 475 hours per year at the low rate.</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": []
+    },
+    {
+      "id": "1781180000002",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-06-11T08:15:00Z",
+      "from": {
+        "user": {
+          "id": "u-jan",
+          "displayName": "Jan Wouters"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Reminder for the summer: the student quota is 650 hours per year since 2023, not 475.</p>"
+      },
+      "attachments": [],
+      "reactions": [
+        {
+          "reactionType": "like",
+          "user": {
+            "user": {
+              "id": "u-anna",
+              "displayName": "Anna De Smet"
+            }
+          }
+        }
+      ],
+      "replies": []
+    }
+  ]
+}

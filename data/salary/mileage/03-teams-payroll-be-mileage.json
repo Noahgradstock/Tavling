@@ -1,0 +1,54 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1785910000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-08-05T08:20:00Z",
+      "from": {
+        "user": {
+          "id": "u-sofie",
+          "displayName": "Sofie Maes"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>For the August run I use €0.4280 per km for business trips, ok?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1785911000002",
+          "replyToId": "1785910000001",
+          "messageType": "message",
+          "createdDateTime": "2026-08-05T08:45:00Z",
+          "from": {
+            "user": {
+              "id": "u-lotte",
+              "displayName": "Lotte Verbeke"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Sofie it changed on 1 July: €0.4326 per km now. Please update your templates.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-jan",
+                  "displayName": "Jan Wouters"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

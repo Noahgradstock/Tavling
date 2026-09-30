@@ -1,0 +1,63 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1773140000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-03-10T09:12:00Z",
+      "from": {
+        "user": {
+          "id": "u-bram",
+          "displayName": "Bram Hermans"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Client asks about eco vouchers for PC 200. It's €300 per year now, right?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1773141000002",
+          "replyToId": "1773140000001",
+          "messageType": "message",
+          "createdDateTime": "2026-03-10T09:40:00Z",
+          "from": {
+            "user": {
+              "id": "u-anna",
+              "displayName": "Anna De Smet"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Bram no, it is still €250 per year for a full-time employee. The €300 was a union proposal that never got signed.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-jan",
+                  "displayName": "Jan Wouters"
+                }
+              }
+            },
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-lotte",
+                  "displayName": "Lotte Verbeke"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

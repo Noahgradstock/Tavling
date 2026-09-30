@@ -1,0 +1,54 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1782900000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-07-01T14:00:00Z",
+      "from": {
+        "user": {
+          "id": "u-tom",
+          "displayName": "Tom Claes"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>overtime premium on a normal weekday is 25% right?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1782901000002",
+          "replyToId": "1782900000001",
+          "messageType": "message",
+          "createdDateTime": "2026-07-01T14:20:00Z",
+          "from": {
+            "user": {
+              "id": "u-an",
+              "displayName": "An Peeters"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Tom no: 50% on weekdays, 100% on Sundays and public holidays.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-anna",
+                  "displayName": "Anna De Smet"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

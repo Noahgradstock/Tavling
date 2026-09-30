@@ -1,0 +1,63 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1778570000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-05-12T13:05:00Z",
+      "from": {
+        "user": {
+          "id": "u-nora",
+          "displayName": "Nora Willems"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Quick one: the minimum car benefit is €1,600 per year, the guide says so.</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1778571000002",
+          "replyToId": "1778570000001",
+          "messageType": "message",
+          "createdDateTime": "2026-05-12T13:30:00Z",
+          "from": {
+            "user": {
+              "id": "u-jan",
+              "displayName": "Jan Wouters"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Nora the guide is outdated. Since January it is €1,650 per year.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-anna",
+                  "displayName": "Anna De Smet"
+                }
+              }
+            },
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-lotte",
+                  "displayName": "Lotte Verbeke"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

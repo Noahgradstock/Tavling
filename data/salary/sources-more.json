@@ -1,0 +1,1055 @@
+{
+  "about": "Extra fictional salary topics for the trust engine: facts, claims, people, clients and test questions. All names, amounts and legal references are made up.",
+  "today": "2026-09-30",
+  "facts": [
+    {
+      "key": "eco-vouchers",
+      "label": "Max eco vouchers per year",
+      "topic": "benefits",
+      "keywords": [
+        "eco voucher",
+        "eco-voucher",
+        "ecocheque",
+        "eco cheque",
+        "écochèque"
+      ]
+    },
+    {
+      "key": "company-car-minimum",
+      "label": "Minimum taxable benefit for a company car",
+      "topic": "company-car",
+      "keywords": [
+        "company car",
+        "bedrijfswagen",
+        "voiture de société",
+        "car benefit",
+        "benefit in kind",
+        "vaa",
+        "atn"
+      ]
+    },
+    {
+      "key": "mileage-allowance",
+      "label": "Mileage allowance per km for business travel",
+      "topic": "indexation",
+      "keywords": [
+        "mileage",
+        "kilometer allowance",
+        "km allowance",
+        "per km",
+        "kilometervergoeding",
+        "indemnité kilométrique",
+        "business travel"
+      ]
+    },
+    {
+      "key": "telework-allowance",
+      "label": "Max telework allowance per month",
+      "topic": "benefits",
+      "keywords": [
+        "telework",
+        "home office",
+        "homework allowance",
+        "thuiswerk",
+        "télétravail",
+        "work from home",
+        "remote work"
+      ]
+    },
+    {
+      "key": "overtime-premium",
+      "label": "Overtime premium on weekdays",
+      "topic": "working-time",
+      "keywords": [
+        "overtime premium",
+        "overtime pay",
+        "overtime rate",
+        "pay for overtime",
+        "premium",
+        "overurentoeslag",
+        "sursalaire"
+      ]
+    },
+    {
+      "key": "maternity-leave",
+      "label": "Maternity leave duration",
+      "topic": "leave",
+      "keywords": [
+        "maternity",
+        "moederschap",
+        "zwangerschapsverlof",
+        "bevallingsverlof",
+        "congé de maternité",
+        "pregnancy leave"
+      ]
+    },
+    {
+      "key": "notice-period-5y",
+      "label": "Notice period after 5 years of service (dismissal)",
+      "topic": "dismissal",
+      "keywords": [
+        "notice period",
+        "opzeg",
+        "opzegtermijn",
+        "préavis",
+        "dismissal",
+        "termination",
+        "fire an employee"
+      ]
+    },
+    {
+      "key": "minimum-wage",
+      "label": "Minimum monthly wage",
+      "topic": "indexation",
+      "keywords": [
+        "minimum wage",
+        "minimumloon",
+        "salaire minimum",
+        "gmmmi",
+        "minimum salary",
+        "lowest salary"
+      ]
+    },
+    {
+      "key": "student-work-hours",
+      "label": "Student work: hours per year at reduced social security",
+      "topic": "student-work",
+      "keywords": [
+        "student",
+        "jobstudent",
+        "studentenarbeid",
+        "student job",
+        "étudiant"
+      ]
+    },
+    {
+      "key": "sick-note",
+      "label": "Sick days per year without a medical certificate",
+      "topic": "sick-leave",
+      "keywords": [
+        "sick note",
+        "medical certificate",
+        "doctor's note",
+        "doktersbriefje",
+        "ziektebriefje",
+        "certificat médical",
+        "without certificate"
+      ]
+    },
+    {
+      "key": "payroll-cutoff",
+      "label": "Cut-off day for variable pay input",
+      "topic": "payroll-process",
+      "keywords": [
+        "cut-off",
+        "cutoff",
+        "input deadline",
+        "variable pay",
+        "payroll deadline",
+        "afsluitdatum"
+      ]
+    },
+    {
+      "key": "bike-allowance",
+      "label": "Bike allowance per km for commuting",
+      "topic": "benefits",
+      "keywords": [
+        "bike allowance",
+        "bicycle allowance",
+        "bike",
+        "bicycle",
+        "fiets",
+        "fietsvergoeding",
+        "vélo",
+        "cycling"
+      ]
+    }
+  ],
+  "people": {
+    "bram": {
+      "name": "Bram Hermans",
+      "role": "regular",
+      "team": "Payroll BE"
+    },
+    "nora": {
+      "name": "Nora Willems",
+      "role": "new",
+      "team": "Payroll BE"
+    },
+    "marc": {
+      "name": "Marc Dubois",
+      "role": "expert",
+      "team": "Legal Payroll BE",
+      "left": true
+    },
+    "eva": {
+      "name": "Eva Jansen",
+      "role": "regular",
+      "team": "Payroll NL"
+    }
+  },
+  "clients": {
+    "bouwbedrijf-vermeulen": {
+      "name": "Bouwbedrijf Vermeulen",
+      "country": "BE",
+      "pc": "124"
+    },
+    "hotel-ter-duinen": {
+      "name": "Hotel Ter Duinen",
+      "country": "BE",
+      "pc": "302"
+    }
+  },
+  "claims": [
+    {
+      "id": "off-eco-200",
+      "file": "eco-vouchers/01-cao-pc200-eco-vouchers.txt",
+      "fact": "eco-vouchers",
+      "value": "€250",
+      "sourceType": "official",
+      "title": "PC 200 agreement: eco vouchers",
+      "author": null,
+      "date": "2024-01-15",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "trusted: sector agreement",
+      "effectiveFrom": "2024-01-01"
+    },
+    {
+      "id": "tm-eco-bram",
+      "file": "eco-vouchers/02-teams-payroll-be-eco-vouchers.json",
+      "fact": "eco-vouchers",
+      "value": "€300",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "bram",
+      "date": "2026-03-10",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "low: contradicts the agreement, corrected"
+    },
+    {
+      "id": "tm-eco-anna",
+      "file": "eco-vouchers/02-teams-payroll-be-eco-vouchers.json",
+      "fact": "eco-vouchers",
+      "value": "€250",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "anna",
+      "date": "2026-03-10",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "trusted: expert, matches",
+      "reactions": [
+        "jan",
+        "lotte"
+      ],
+      "corrects": "tm-eco-bram"
+    },
+    {
+      "id": "sp-eco-faq",
+      "file": "eco-vouchers/03-benefits-faq.md",
+      "fact": "eco-vouchers",
+      "value": "€250",
+      "sourceType": "sharepoint",
+      "title": "Benefits FAQ – Belgium",
+      "author": "lotte",
+      "date": "2025-06-01",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "trusted: expert page, matches"
+    },
+    {
+      "id": "off-car-2026",
+      "file": "company-car/01-official-minimum-car-benefit-2026.txt",
+      "fact": "company-car-minimum",
+      "value": "€1,650",
+      "sourceType": "official",
+      "title": "Official: minimum car benefit 2026",
+      "author": null,
+      "date": "2025-12-20",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: official, in force",
+      "effectiveFrom": "2026-01-01"
+    },
+    {
+      "id": "off-car-2025",
+      "file": "company-car/02-official-minimum-car-benefit-2025.txt",
+      "fact": "company-car-minimum",
+      "value": "€1,600",
+      "sourceType": "official",
+      "title": "Official: minimum car benefit 2025",
+      "author": null,
+      "date": "2024-12-18",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: replaced by the 2026 amount",
+      "effectiveFrom": "2025-01-01"
+    },
+    {
+      "id": "sp-car-guide",
+      "file": "company-car/03-company-car-guide.md",
+      "fact": "company-car-minimum",
+      "value": "€1,600",
+      "sourceType": "sharepoint",
+      "title": "Company car guide",
+      "author": "marc",
+      "date": "2025-02-03",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old rule, author left"
+    },
+    {
+      "id": "tm-car-nora",
+      "file": "company-car/04-teams-payroll-be-cars.json",
+      "fact": "company-car-minimum",
+      "value": "€1,600",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "nora",
+      "date": "2026-05-12",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: new hire, outdated, corrected"
+    },
+    {
+      "id": "tm-car-jan",
+      "file": "company-car/04-teams-payroll-be-cars.json",
+      "fact": "company-car-minimum",
+      "value": "€1,650",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "jan",
+      "date": "2026-05-12",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted",
+      "reactions": [
+        "anna",
+        "lotte"
+      ],
+      "corrects": "tm-car-nora"
+    },
+    {
+      "id": "off-km-jul26",
+      "file": "mileage/01-official-mileage-july-2026.txt",
+      "fact": "mileage-allowance",
+      "value": "€0.4326",
+      "sourceType": "official",
+      "title": "Official: mileage allowance July 2026",
+      "author": null,
+      "date": "2026-06-20",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: current official amount",
+      "effectiveFrom": "2026-07-01"
+    },
+    {
+      "id": "off-km-jan26",
+      "file": "mileage/02-official-mileage-january-2026.txt",
+      "fact": "mileage-allowance",
+      "value": "€0.4280",
+      "sourceType": "official",
+      "title": "Official: mileage allowance January 2026",
+      "author": null,
+      "date": "2025-12-19",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: replaced in July",
+      "effectiveFrom": "2026-01-01"
+    },
+    {
+      "id": "tm-km-sofie",
+      "file": "mileage/03-teams-payroll-be-mileage.json",
+      "fact": "mileage-allowance",
+      "value": "€0.4280",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "sofie",
+      "date": "2026-08-05",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: outdated amount, corrected"
+    },
+    {
+      "id": "tm-km-lotte",
+      "file": "mileage/03-teams-payroll-be-mileage.json",
+      "fact": "mileage-allowance",
+      "value": "€0.4326",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "lotte",
+      "date": "2026-08-05",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted",
+      "reactions": [
+        "jan"
+      ],
+      "corrects": "tm-km-sofie"
+    },
+    {
+      "id": "sp-km-nl",
+      "file": "mileage/04-nl-reiskostenvergoeding.md",
+      "fact": "mileage-allowance",
+      "value": "€0.23",
+      "sourceType": "sharepoint",
+      "title": "Reiskostenvergoeding – Nederland",
+      "author": "lars",
+      "date": "2026-01-10",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "NL only; set aside for BE"
+    },
+    {
+      "id": "off-tw-2026",
+      "file": "telework/01-official-telework-allowance-april-2026.txt",
+      "fact": "telework-allowance",
+      "value": "€154.74",
+      "sourceType": "official",
+      "title": "Official: telework allowance April 2026",
+      "author": null,
+      "date": "2026-03-28",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: official",
+      "effectiveFrom": "2026-04-01"
+    },
+    {
+      "id": "sp-tw-policy",
+      "file": "telework/02-telework-policy.md",
+      "fact": "telework-allowance",
+      "value": "€151.70",
+      "sourceType": "sharepoint",
+      "title": "Telework policy – Belgium",
+      "author": "an",
+      "date": "2025-11-05",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: written before the April 2026 indexation"
+    },
+    {
+      "id": "em-tw-techstart",
+      "file": "telework/03-email-techstart-telework.eml",
+      "fact": "telework-allowance",
+      "value": "€100",
+      "sourceType": "email",
+      "title": "Email: TechStart Gent telework policy",
+      "author": "jan",
+      "date": "2026-02-11",
+      "scope": {
+        "country": "BE",
+        "pc": "200",
+        "client": "techstart-gent"
+      },
+      "expected": "trusted for TechStart: client exception"
+    },
+    {
+      "id": "tm-tw-pieter",
+      "file": "telework/04-teams-payroll-be-telework.json",
+      "fact": "telework-allowance",
+      "value": "€154.74",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "pieter",
+      "date": "2026-04-03",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: matches, expert thumbs",
+      "reactions": [
+        "an"
+      ]
+    },
+    {
+      "id": "off-ot-premium",
+      "file": "overtime/01-labour-act-overtime-premium.txt",
+      "fact": "overtime-premium",
+      "value": "50%",
+      "sourceType": "official",
+      "title": "Labour Act: overtime pay",
+      "author": null,
+      "date": "2019-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the law",
+      "effectiveFrom": "1971-03-16"
+    },
+    {
+      "id": "tm-ot-tom",
+      "file": "overtime/02-teams-payroll-be-overtime-pay.json",
+      "fact": "overtime-premium",
+      "value": "25%",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "tom",
+      "date": "2026-07-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: new hire, contradicts the law"
+    },
+    {
+      "id": "tm-ot-an",
+      "file": "overtime/02-teams-payroll-be-overtime-pay.json",
+      "fact": "overtime-premium",
+      "value": "50%",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "an",
+      "date": "2026-07-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted",
+      "reactions": [
+        "anna"
+      ],
+      "corrects": "tm-ot-tom"
+    },
+    {
+      "id": "sp-ot-nl",
+      "file": "overtime/03-nl-overwerk.md",
+      "fact": "overtime-premium",
+      "value": "no statutory premium",
+      "sourceType": "sharepoint",
+      "title": "Overwerk – Nederland",
+      "author": "sanne",
+      "date": "2025-09-01",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "NL only"
+    },
+    {
+      "id": "off-mat-be",
+      "file": "leave/01-be-maternity-leave.txt",
+      "fact": "maternity-leave",
+      "value": "15 weeks",
+      "sourceType": "official",
+      "title": "Official: maternity leave Belgium",
+      "author": null,
+      "date": "2019-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted in BE",
+      "effectiveFrom": "2019-01-01"
+    },
+    {
+      "id": "off-mat-nl",
+      "file": "leave/02-nl-zwangerschapsverlof.txt",
+      "fact": "maternity-leave",
+      "value": "16 weeks",
+      "sourceType": "official",
+      "title": "Official: zwangerschapsverlof Nederland",
+      "author": null,
+      "date": "2019-01-01",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "trusted in NL",
+      "effectiveFrom": "2019-01-01"
+    },
+    {
+      "id": "tm-mat-emma",
+      "file": "leave/03-teams-payroll-be-leave.json",
+      "fact": "maternity-leave",
+      "value": "16 weeks",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "emma",
+      "date": "2026-06-15",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low in BE: Dutch rule in the Belgian channel"
+    },
+    {
+      "id": "sp-mat-guide",
+      "file": "leave/04-leave-guide-be.md",
+      "fact": "maternity-leave",
+      "value": "15 weeks",
+      "sourceType": "sharepoint",
+      "title": "Leave guide – Belgium",
+      "author": "lotte",
+      "date": "2024-09-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: matches the law"
+    },
+    {
+      "id": "off-notice-be",
+      "file": "dismissal/01-be-notice-periods.txt",
+      "fact": "notice-period-5y",
+      "value": "18 weeks",
+      "sourceType": "official",
+      "title": "Official: notice periods Belgium",
+      "author": null,
+      "date": "2014-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the law",
+      "effectiveFrom": "2014-01-01"
+    },
+    {
+      "id": "sp-notice-old",
+      "file": "dismissal/02-dismissal-manual-2013.md",
+      "fact": "notice-period-5y",
+      "value": "3 months",
+      "sourceType": "sharepoint",
+      "title": "Dismissal manual (2013)",
+      "author": "marc",
+      "date": "2013-06-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: rules from before 2014, author left"
+    },
+    {
+      "id": "tm-notice-nora",
+      "file": "dismissal/03-teams-payroll-be-dismissal.json",
+      "fact": "notice-period-5y",
+      "value": "15 weeks",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "nora",
+      "date": "2026-09-02",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: new hire, wrong, corrected"
+    },
+    {
+      "id": "tm-notice-anna",
+      "file": "dismissal/03-teams-payroll-be-dismissal.json",
+      "fact": "notice-period-5y",
+      "value": "18 weeks",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "anna",
+      "date": "2026-09-02",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted",
+      "reactions": [
+        "jan",
+        "an"
+      ],
+      "corrects": "tm-notice-nora"
+    },
+    {
+      "id": "off-minw-apr26",
+      "file": "minimum-wage/01-be-minimum-wage-april-2026.txt",
+      "fact": "minimum-wage",
+      "value": "€2,111.89",
+      "sourceType": "official",
+      "title": "Official: minimum wage April 2026",
+      "author": null,
+      "date": "2026-03-30",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: current",
+      "effectiveFrom": "2026-04-01"
+    },
+    {
+      "id": "off-minw-jan26",
+      "file": "minimum-wage/02-be-minimum-wage-january-2026.txt",
+      "fact": "minimum-wage",
+      "value": "€2,070.48",
+      "sourceType": "official",
+      "title": "Official: minimum wage January 2026",
+      "author": null,
+      "date": "2025-12-20",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: replaced in April",
+      "effectiveFrom": "2026-01-01"
+    },
+    {
+      "id": "off-minw-nl",
+      "file": "minimum-wage/03-nl-minimumloon-july-2026.txt",
+      "fact": "minimum-wage",
+      "value": "€2,245.80",
+      "sourceType": "official",
+      "title": "Official: minimumloon Nederland July 2026",
+      "author": null,
+      "date": "2026-06-25",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "trusted in NL",
+      "effectiveFrom": "2026-07-01"
+    },
+    {
+      "id": "tm-minw-pieter",
+      "file": "minimum-wage/04-teams-payroll-be-minimum-wage.json",
+      "fact": "minimum-wage",
+      "value": "€2,070.48",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "pieter",
+      "date": "2026-05-20",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: amount from before April"
+    },
+    {
+      "id": "off-stud-650",
+      "file": "students/01-be-student-work-650-hours.txt",
+      "fact": "student-work-hours",
+      "value": "650 hours",
+      "sourceType": "official",
+      "title": "Official: student work quota",
+      "author": null,
+      "date": "2022-12-20",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the law",
+      "effectiveFrom": "2023-01-01"
+    },
+    {
+      "id": "sp-stud-old",
+      "file": "students/02-student-work-faq-2021.md",
+      "fact": "student-work-hours",
+      "value": "475 hours",
+      "sourceType": "sharepoint",
+      "title": "Student work FAQ (2021)",
+      "author": "koen",
+      "date": "2021-03-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old quota, author left"
+    },
+    {
+      "id": "tm-stud-sofie",
+      "file": "students/03-teams-payroll-be-students.json",
+      "fact": "student-work-hours",
+      "value": "475 hours",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "sofie",
+      "date": "2026-06-10",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old quota"
+    },
+    {
+      "id": "tm-stud-jan",
+      "file": "students/03-teams-payroll-be-students.json",
+      "fact": "student-work-hours",
+      "value": "650 hours",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "jan",
+      "date": "2026-06-11",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted",
+      "reactions": [
+        "anna"
+      ]
+    },
+    {
+      "id": "off-cert-2022",
+      "file": "sick-note/01-be-sick-note-rule.txt",
+      "fact": "sick-note",
+      "value": "3 times per year",
+      "sourceType": "official",
+      "title": "Official: sick note rule",
+      "author": null,
+      "date": "2022-11-28",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the law",
+      "effectiveFrom": "2022-11-28"
+    },
+    {
+      "id": "sp-cert-manual",
+      "file": "sick-note/02-payroll-manual-sick-note.md",
+      "fact": "sick-note",
+      "value": "from day 1",
+      "sourceType": "sharepoint",
+      "title": "Payroll manual – absence (2021)",
+      "author": "koen",
+      "date": "2021-01-15",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: rule from before 2022, author left"
+    },
+    {
+      "id": "tm-cert-tom",
+      "file": "sick-note/03-teams-payroll-be-sick-note.json",
+      "fact": "sick-note",
+      "value": "2 times per year",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "tom",
+      "date": "2026-02-20",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: new hire, wrong"
+    },
+    {
+      "id": "tm-cert-lotte",
+      "file": "sick-note/03-teams-payroll-be-sick-note.json",
+      "fact": "sick-note",
+      "value": "3 times per year",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "lotte",
+      "date": "2026-02-20",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted",
+      "reactions": [
+        "anna"
+      ],
+      "corrects": "tm-cert-tom"
+    },
+    {
+      "id": "sp-cutoff-proc",
+      "file": "process/01-payroll-calendar-procedure.md",
+      "fact": "payroll-cutoff",
+      "value": "18th of the month",
+      "sourceType": "sharepoint",
+      "title": "Payroll calendar procedure",
+      "author": "marc",
+      "date": "2024-01-10",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old procedure, author left"
+    },
+    {
+      "id": "tm-cutoff-anna",
+      "file": "process/02-teams-payroll-be-cutoff.json",
+      "fact": "payroll-cutoff",
+      "value": "20th of the month",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "anna",
+      "date": "2026-08-18",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "conflict: experts disagree",
+      "reactions": [
+        "lotte"
+      ]
+    },
+    {
+      "id": "tm-cutoff-jan",
+      "file": "process/02-teams-payroll-be-cutoff.json",
+      "fact": "payroll-cutoff",
+      "value": "22nd of the month",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "jan",
+      "date": "2026-08-19",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "conflict: experts disagree",
+      "reactions": [
+        "an"
+      ]
+    },
+    {
+      "id": "off-bike-2026",
+      "file": "bike/01-be-bike-allowance-2026.txt",
+      "fact": "bike-allowance",
+      "value": "€0.36",
+      "sourceType": "official",
+      "title": "Official: bike allowance 2026",
+      "author": null,
+      "date": "2025-12-15",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted",
+      "effectiveFrom": "2026-01-01"
+    },
+    {
+      "id": "tm-bike-bram",
+      "file": "bike/02-teams-payroll-be-bike.json",
+      "fact": "bike-allowance",
+      "value": "€0.35",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "bram",
+      "date": "2026-04-08",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: last year's amount"
+    },
+    {
+      "id": "em-bike-vermeulen",
+      "file": "bike/03-email-bouwbedrijf-vermeulen-bike.eml",
+      "fact": "bike-allowance",
+      "value": "€0.40",
+      "sourceType": "email",
+      "title": "Email: Bouwbedrijf Vermeulen bike allowance",
+      "author": "jan",
+      "date": "2026-01-22",
+      "scope": {
+        "country": "BE",
+        "pc": "124",
+        "client": "bouwbedrijf-vermeulen"
+      },
+      "expected": "trusted for this client"
+    }
+  ],
+  "testQuestions": [
+    {
+      "question": "What is the maximum eco voucher amount per year?",
+      "context": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expectedAnswer": "€250"
+    },
+    {
+      "question": "What is the minimum benefit in kind for a company car in 2026?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "€1,650"
+    },
+    {
+      "question": "What is the mileage allowance per km for business travel?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "€0.4326"
+    },
+    {
+      "question": "What is the km allowance in the Netherlands?",
+      "context": {
+        "country": "NL"
+      },
+      "expectedAnswer": "€0.23"
+    },
+    {
+      "question": "What is the maximum telework allowance per month?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "€154.74"
+    },
+    {
+      "question": "What telework allowance does TechStart pay?",
+      "context": {
+        "client": "techstart-gent"
+      },
+      "expectedAnswer": "€100"
+    },
+    {
+      "question": "What is the overtime premium on a weekday?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "50%"
+    },
+    {
+      "question": "How long is maternity leave?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "15 weeks"
+    },
+    {
+      "question": "How long is maternity leave in the Netherlands?",
+      "context": {
+        "country": "NL"
+      },
+      "expectedAnswer": "16 weeks"
+    },
+    {
+      "question": "What is the notice period after 5 years of service?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "18 weeks"
+    },
+    {
+      "question": "What is the minimum wage in Belgium?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "€2,111.89"
+    },
+    {
+      "question": "What is the minimum wage in the Netherlands?",
+      "context": {
+        "country": "NL"
+      },
+      "expectedAnswer": "€2,245.80"
+    },
+    {
+      "question": "How many hours can a student work per year?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "650 hours"
+    },
+    {
+      "question": "How often can an employee be sick one day without a medical certificate?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "3 times per year"
+    },
+    {
+      "question": "What is the bike allowance per km?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "€0.36"
+    },
+    {
+      "question": "What bike allowance does Bouwbedrijf Vermeulen pay?",
+      "context": {
+        "client": "bouwbedrijf-vermeulen"
+      },
+      "expectedAnswer": "€0.40"
+    }
+  ]
+}

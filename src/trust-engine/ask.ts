@@ -17,7 +17,8 @@ export function matchFact(question: string, facts: Fact[]): Fact | null {
   const q = question.toLowerCase();
   let best: { fact: Fact; hits: number } | null = null;
   for (const fact of facts) {
-    const hits = fact.keywords.filter((k) => q.includes(k.toLowerCase())).length;
+    // Longer keyword matches weigh more, so "overtime premium" beats plain "overtime".
+    const hits = fact.keywords.filter((k) => q.includes(k.toLowerCase())).reduce((sum, k) => sum + k.length, 0);
     if (hits && (!best || hits > best.hits)) best = { fact, hits };
   }
   return best?.fact ?? null;

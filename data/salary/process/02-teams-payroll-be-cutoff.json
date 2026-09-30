@@ -1,0 +1,63 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1787040000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-08-18T10:00:00Z",
+      "from": {
+        "user": {
+          "id": "u-anna",
+          "displayName": "Anna De Smet"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Reminder: variable pay input is due on the 20th of the month.</p>"
+      },
+      "attachments": [],
+      "reactions": [
+        {
+          "reactionType": "like",
+          "user": {
+            "user": {
+              "id": "u-lotte",
+              "displayName": "Lotte Verbeke"
+            }
+          }
+        }
+      ],
+      "replies": []
+    },
+    {
+      "id": "1787130000002",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-08-19T09:00:00Z",
+      "from": {
+        "user": {
+          "id": "u-jan",
+          "displayName": "Jan Wouters"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>For my clients the cut-off moved: variable pay input is due on the 22nd of the month since the new payroll engine.</p>"
+      },
+      "attachments": [],
+      "reactions": [
+        {
+          "reactionType": "like",
+          "user": {
+            "user": {
+              "id": "u-an",
+              "displayName": "An Peeters"
+            }
+          }
+        }
+      ],
+      "replies": []
+    }
+  ]
+}

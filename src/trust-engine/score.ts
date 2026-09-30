@@ -70,7 +70,10 @@ function scoreClaim(
   const refStart = ref ? Date.parse(ref.effectiveFrom ?? ref.date) : null;
   const claimStart = Date.parse(claim.effectiveFrom ?? claim.date);
   const matchesRef = ref ? sameValue(claim.value, ref.value) : false;
-  if (ref && claim.id !== ref.id && refStart !== null && claimStart < refStart && !matchesRef) {
+  // A client agreement that deviates from a sector or country rule is an exception, not a contradiction,
+  // and it does not expire when that general rule changes.
+  const isException = !!ref && !isOfficial && !matchesRef && specificity[relevance] > specificity[refRelevance];
+  if (ref && claim.id !== ref.id && refStart !== null && claimStart < refStart && !matchesRef && !isException) {
     add("freshness", "Old rule", `Written before the rule change of ${ref.effectiveFrom}`, POINTS.predatesRuleChange);
     caps.push({ label: "predates the current rule", max: CAPS.predatesRuleChange });
   }
@@ -94,7 +97,6 @@ function scoreClaim(
 
   // Layer 4 – consistency with the official source. A client agreement that deviates from a
   // sector or country rule is an exception, not a contradiction.
-  const isException = !!ref && !isOfficial && !matchesRef && specificity[relevance] > specificity[refRelevance];
   if (isException) add("consistency", "Client exception", `Client agreement that deviates from ${ref!.source.title}`, POINTS.clientException);
   else if (ref && !isOfficial) {
     if (matchesRef) add("consistency", "Matches law", `Matches ${ref.source.title}`, POINTS.matchesOfficial);
