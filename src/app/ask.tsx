@@ -12,7 +12,7 @@ import { Result } from "./result";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
-const STEP_MS = 4_000; // each step plays slowly on its own…
+const STEP_MS = [4_000, 10_000, 4_000, 4_000, 4_000, 4_000, 300]; // each step plays on its own; reading the documents takes longest…
 const PAUSE_MS = 1_000; // …then holds briefly before the next one starts
 const CONNECT = 0.16; // first: search the connected systems
 const SCAN = 0.42; // then scan the documents, then sort them
@@ -298,11 +298,7 @@ function Thinking({ p, loading, hit, n }: { p: number; loading: boolean; hit: As
           : stage === 2
             ? `${h.claims.filter((c) => c.score >= 0.75).length} sources pass the trust bar`
             : "Choosing the answer";
-  // What the scan step does, in one plain sentence.
-  const explain =
-    h && p >= CONNECT && p < SCAN
-      ? "The system finds the documents relevant to your question and scans them for signals it can compare: what each one says, who wrote it, when, and for which country. That is how it judges which sources apply and how well they fit this question. Every step is logged."
-      : null;
+  const scanning = !!h && p >= CONNECT && p < SCAN;
   return (
     <div>
       <div className="flex items-center gap-3">
@@ -312,7 +308,42 @@ function Thinking({ p, loading, hit, n }: { p: number; loading: boolean; hit: As
         </span>
         <span className="font-serif text-2xl sm:text-3xl">{text}</span>
       </div>
-      {explain && <p className="mt-2 max-w-2xl pl-[22px] text-sm leading-relaxed text-neutral-500">{explain}</p>}
+      {scanning && h && <ScanCriteria keywords={h.fact.keywords} />}
+    </div>
+  );
+}
+
+// What the brain pulls out of every document while it reads, shown above the documents.
+const SIGNALS = [
+  { name: "What it says", q: "the value that answers you" },
+  { name: "Who wrote it", q: "author and team" },
+  { name: "Authority", q: "official, expert or new hire" },
+  { name: "Relevance", q: "country, sector and client" },
+  { name: "Date", q: "when it was written" },
+];
+
+function ScanCriteria({ keywords }: { keywords: string[] }) {
+  return (
+    <div className="mt-4 rounded-2xl bg-white/70 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-500">
+        <span>Matched on keywords</span>
+        {keywords.slice(0, 5).map((k) => (
+          <span key={k} className="rounded-full bg-[#e8efff] px-2 py-0.5 font-medium text-[#1463ff]">
+            {k}
+          </span>
+        ))}
+        <span>· pulls out of every document:</span>
+      </div>
+      <ol className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {SIGNALS.map((sig, i) => (
+          <li key={sig.name} className="rounded-xl bg-[#f6f5f2] px-3 py-2">
+            <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">0{i + 1}</div>
+            <div className="text-[13px] font-medium">{sig.name}</div>
+            <div className="text-[11px] leading-snug text-neutral-500">{sig.q}</div>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-2 text-[11px] text-neutral-400">Every document is logged, so each judgment can be checked later.</div>
     </div>
   );
 }

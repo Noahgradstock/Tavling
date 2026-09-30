@@ -71,8 +71,8 @@ export const shortReason = (reason: string) =>
         : "Reported not applicable";
 
 // Plays an animation from 0 to 1 in steps: each segment up to the next value in `stops` takes `stepMs`,
-// then it pauses `pauseMs` and moves on by itself. skip() jumps to the end.
-export function useStepper(run: number, stops: number[], stepMs: number, pauseMs: number) {
+// then it pauses `pauseMs` and moves on by itself. `stepMs` can be one value or one per step. skip() jumps to the end.
+export function useStepper(run: number, stops: number[], stepMs: number | number[], pauseMs: number) {
   // Progress belongs to a run, so a new run starts at 0 instead of flashing the last run's end.
   const [prog, setProg] = useState({ run: 0, p: 0 });
   const p = prog.run === run ? prog.p : 0;
@@ -90,7 +90,7 @@ export function useStepper(run: number, stops: number[], stepMs: number, pauseMs
     }
     const from = pRef.current;
     // A tiny last segment (e.g. showing the answer) should not take a whole step.
-    const ms = target - from < 0.01 ? 300 : stepMs;
+    const ms = target - from < 0.01 ? 300 : Array.isArray(stepMs) ? (stepMs[idx] ?? 4_000) : stepMs;
     const t0 = performance.now();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = (t: number) => {
