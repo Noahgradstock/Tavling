@@ -1,23 +1,55 @@
-# Company brain: trusted answers
+<div align="center">
 
-Team Aleida.ai (Ilke Seynaeve, Isak Andersson, Noa Gradstock) · Tectonic Hackathon 2026 · SD Worx challenge "Unlock the Knowledge Within"
+# Company brain
 
-- **Live demo:** https://tavling-eight.vercel.app
-- **Repository:** https://github.com/Noahgradstock/company-brain
+**One answer from policies, Teams, email and the law, and the reason you can trust it.**
 
-A payroll consultant gets an urgent customer question. The answer exists, but it is spread across a policy, an old manual, a Dutch guide, a Teams thread, a newsletter and a draft email, and they disagree. This proof of concept answers the question **and shows why each source can or cannot be trusted**, so the consultant goes from "I found something" to "I understand why I can rely on it".
+[Live demo](https://tavling-eight.vercel.app) · [Trust engine](src/trust-engine/README.md) · Tectonic Hackathon 2026 · SD Worx challenge
 
-## What it does
+Built by team Aleida.ai: Ilke Seynaeve, Isak Andersson, Noa Gradstock
 
-1. **Ask.** Type a question in any language, or pick one of the examples (sick leave relapse, indexation 2026, meal vouchers, end-of-year bonus, holiday pay).
-2. **Search.** Every source that mentions the topic is collected: official law, SharePoint, Teams, email.
-3. **Score.** A deterministic trust engine scores every claim through six visible layers: authority, freshness, corroboration, consistency with the official source, relevance to this client (country, sector, client), and user feedback.
-4. **Decide.** You get the trusted answer, the conflicts that were found, stale or ownerless sources, and which expert to ask.
-5. **Feedback.** Users can confirm a source or mark it "doesn't apply to my case", which teaches the engine the scope.
+<img src="docs/3-answer.png" alt="The answer card: 8 weeks, trust score 96, and how the brain decided" width="760">
 
-The AI (Gemini) only understands the question and routes it to a topic. It never scores: the same input always gives the same score, and every point is explained. See [src/trust-engine/README.md](src/trust-engine/README.md).
+</div>
 
-## How to run
+## The problem
+
+A client asks an urgent payroll question. The answer is spread across a policy, an old manual, a Dutch guide, a Teams thread and a draft email, and they disagree. Search finds all of them, but it can't tell you which one to trust.
+
+Company brain takes the consultant from *"I found something"* to *"I understand why I can rely on it"*.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[Ask<br/>any language] --> B[Search<br/>law · SharePoint · Teams · email]
+    B --> C[Filter<br/>does it apply to this client?]
+    C --> D[Score<br/>six trust layers]
+    D --> E[Decide<br/>answer · conflicts · expert]
+    E -. feedback .-> D
+```
+
+| | Step | What happens |
+|---|---|---|
+| 1 | **Ask** | Type a question or pick an example. Gemini understands it and routes it to a topic. |
+| 2 | **Search** | Every source that mentions the topic is collected. |
+| 3 | **Filter** | Sources for another country, sector or client are set aside, with the reason shown. |
+| 4 | **Score** | Each claim is scored on six layers: authority, freshness, corroboration, consistency with the law, relevance, feedback. |
+| 5 | **Decide** | The trusted answer, the sources that disagree, and which expert to ask. |
+| 6 | **Learn** | Users mark an answer correct, wrong, outdated or "not my case", and the scores update. |
+
+<table>
+<tr>
+<td width="50%"><img src="docs/1-ask.png" alt="Ask a question for a client"><br><sub><b>1. Ask</b> a question for a specific client</sub></td>
+<td width="50%"><img src="docs/2-score.png" alt="Sources narrowed from 6 found to 1 to read first"><br><sub><b>2–4. Choose</b>: 6 found, 5 apply, 2 trusted, 1 to read first</sub></td>
+</tr>
+</table>
+
+## Why you can trust it
+
+Gemini only interprets the question. The score comes from a deterministic engine: the same input always gives the same score, and every point is explained. Nothing is hidden in a black box. Weights and rules are in [src/trust-engine/config.ts](src/trust-engine/config.ts).
+
+## Run it
 
 Requires Node 20+.
 
@@ -29,22 +61,16 @@ npm test         # trust engine tests
 
 Optional: put `GEMINI_API_KEY=...` in `.env.local` for free-text questions. Without a key the app falls back to keyword matching and still works end to end.
 
-## Deploy
-
-The live demo runs on Vercel (project `tavling`). Pushing to GitHub does not deploy automatically yet; from the repo folder run:
-
-```bash
-vercel deploy --prod
-```
-
-`GEMINI_API_KEY` is set as an encrypted environment variable in the Vercel project.
+The live demo runs on Vercel (project `tavling`), with `GEMINI_API_KEY` set as an encrypted environment variable. Pushing to GitHub does not deploy automatically yet; run `vercel deploy --prod` from the repo folder.
 
 ## Structure
 
-- `src/app/`: the demo page (ask → search → trust funnel → answer) and API routes under `api/trust/`
-- `src/trust-engine/`: scoring engine, weights in `config.ts`, tests
-- `src/lib/gemini-match.ts`: Gemini question routing
-- `data/salary/`: fictional source files (policies, Teams exports, emails). The trust engine reads its knowledge from here at runtime (`src/trust-engine/data.ts`): claims from `sources.json`, quotes from the files themselves. The test questions in `sources.json` run as part of `npm test`
+| Path | What |
+|---|---|
+| `src/app/` | The demo page (ask → search → trust funnel → answer) and API routes under `api/trust/` |
+| `src/trust-engine/` | Scoring engine, weights in `config.ts`, tests |
+| `src/lib/gemini-match.ts` | Gemini question routing |
+| `data/salary/` | Fictional source files (policies, Teams exports, emails). The engine reads claims from `sources.json` and quotes from the files. The test questions in `sources.json` run as part of `npm test` |
 
 ## Unfinished
 
