@@ -12,8 +12,8 @@ import { Result } from "./result";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
-const STEP_MS = 7_000; // each step plays slowly on its own…
-const PAUSE_MS = 1_500; // …then holds briefly before the next one starts
+const STEP_MS = 4_000; // each step plays slowly on its own…
+const PAUSE_MS = 1_000; // …then holds briefly before the next one starts
 const CONNECT = 0.16; // first: search the connected systems
 const SCAN = 0.42; // then scan the documents, then sort them
 // Where each step ends.
