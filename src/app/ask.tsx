@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { customer } from "@/lib/knowledge";
 import type { AskResult, Client, FeedbackKind } from "@/trust-engine";
@@ -115,6 +115,27 @@ export default function Ask() {
     }
   }
 
+  // An example is typed into the chat box first, then sent, as if the user asked it.
+  const typing = useRef(false);
+  function tryExample(ex: Example) {
+    if (typing.current || loading) return;
+    typing.current = true;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const q = ex.question;
+    const steps = Math.min(q.length, 40);
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setQuestion(q.slice(0, Math.ceil((q.length * i) / steps)));
+      if (i < steps) return;
+      clearInterval(id);
+      setTimeout(() => {
+        typing.current = false;
+        ask(q, ex.context);
+      }, 600);
+    }, 25);
+  }
+
   // The voter is the signed-in user: the server reads it from the session cookie.
   async function vote(claimId: string, kind: FeedbackKind) {
     const res = await fetch("/api/trust/feedback", {
@@ -180,7 +201,7 @@ export default function Ask() {
               {[DEMO_CASE, ...examples].map((ex, i) => (
                 <button
                   key={i}
-                  onClick={() => ask(ex.question, ex.context)}
+                  onClick={() => tryExample(ex)}
                   className="group flex items-center gap-4 py-2.5 text-left text-sm"
                 >
                   <span className="min-w-0 flex-1 truncate text-neutral-700 group-hover:text-black">{ex.question}</span>
