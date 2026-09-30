@@ -49,6 +49,35 @@ flowchart LR
 
 Gemini only interprets the question. The score comes from a deterministic engine: the same input always gives the same score, and every point is explained. Nothing is hidden in a black box. Weights and rules are in [src/trust-engine/config.ts](src/trust-engine/config.ts).
 
+## The trust algorithm
+
+Every source is split into **claims**: one statement, one value, one scope (country, sector, client). Each claim starts at 50% and six layers add or subtract points. The points are summed and turned into a percentage (log-odds: +2 ≈ 88%, −2 ≈ 12%).
+
+| Layer | Question | Points |
+|---|---|---|
+| 1. Authority | Who said it? | official +3 · expert +1 · new hire −0.5 · author left the company −1 |
+| 2. Freshness | Is it current? | −1 per topic half-life (max −2) · written before the rule changed −2.5 |
+| 3. Corroboration | Who agrees? | expert 👍 +0.5 each · colleague says the same +0.7 · corrected in a reply −1.5 |
+| 4. Consistency | Does it match the law? | matches +2 · contradicts −3 · client agreement that deviates: exception, +0.5 |
+| 5. Relevance | Does it fit this case? | client +1.5 · sector +1 · country +0.3 · other country or sector: set aside |
+| 6. Feedback | Did it work for others? | votes weighted by role, max ±2 · votes can't overrule the law |
+
+**Hard caps** stop a high sum from hiding a real problem: contradicts the law → max 20%, written before the current rule → max 30%, no expert or official source behind it → max 60%.
+
+**Which answer wins:** the most specific trusted claim (≥ 75%). A client's own agreement beats the sector rule, and when the law and a colleague say the same thing, the law is shown as the source. Two trusted claims with different values mean **experts disagree**, and the brain says so instead of guessing.
+
+**Worked example**: "What is the minimum company car benefit in 2026?" (Belgium)
+
+| Source | Says | Why | Score |
+|---|---|---|---|
+| Official notice 2026 | €1,650 | +3 official | **96%** ✓ answer |
+| Teams, Jan (expert) | €1,650 | +1 expert, +1 two expert 👍, +2 matches law | 98% backs it |
+| Official notice 2025 | €1,600 | +3 official, −2.5 old rule → capped | 30% |
+| Teams, Nora (new hire) | €1,600 | −0.5 new hire, −1.5 corrected by Jan, −3 contradicts law | 1% |
+| Company car guide | €1,600 | −1 author left, −2.5 old rule, −3 contradicts law | 0% |
+
+**Does it work?** `npm test` runs the engine on 24 test questions over 19 salary topics in [data/salary](data/salary) (official notices, SharePoint guides, Teams exports, client emails) and checks every answer. All 24 pass.
+
 ## Run it
 
 Requires Node 20+.
