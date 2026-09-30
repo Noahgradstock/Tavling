@@ -1,14 +1,51 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { customer, sources, type Source } from "@/lib/knowledge";
+import { customer, sources as internal, type Source } from "@/lib/knowledge";
 
 // Scroll drives the whole demo: 0 → 1 across a tall section while the stage stays pinned.
 const clamp = (x: number) => Math.min(1, Math.max(0, x));
 const seg = (p: number, a: number, b: number) => clamp((p - a) / (b - a));
 
+type Country = "BE" | "NL" | "EU";
+type DemoSource = Omit<Source, "country" | "channel"> & { country: Country; channel: string };
+
+// Official legal texts the brain also searches (unofficial English wording for the demo).
+const LAWS: DemoSource[] = [
+  {
+    id: "eu-883",
+    title: "Regulation (EC) No 883/2004 – coordination of social security systems, Art. 11",
+    short: "EU Reg. 883/2004",
+    channel: "EUR-Lex",
+    date: "2004-04-29",
+    owner: "European Union",
+    ownerActive: true,
+    verifiedBy: "Official Journal of the EU",
+    country: "EU",
+    status: "final",
+    text: `Persons to whom this Regulation applies shall be subject to the legislation of a single Member State only. A person pursuing an activity as an employed person in a Member State shall be subject to the legislation of that Member State. Sickness benefits in cash are provided by the competent institution in accordance with the legislation it applies.`,
+  },
+  {
+    id: "be-law-1978",
+    title: "Law of 3 July 1978 on employment contracts – guaranteed salary, Art. 70",
+    short: "BE Law 3 July 1978",
+    channel: "Belgian Official Journal",
+    date: "2026-01-01",
+    owner: "FPS Employment",
+    ownerActive: true,
+    verifiedBy: "Belgian Official Journal",
+    country: "BE",
+    status: "final",
+    text: `An employee who is unable to work because of illness keeps the right to their normal salary during the first 30 days of incapacity. If a new incapacity starts within 8 weeks after the end of a previous one, it is considered a continuation: guaranteed salary is only due for the days not yet paid. Unless the employee proves a different illness. (Consolidated version, in force from 1 January 2026.)`,
+  },
+];
+
+const sources: DemoSource[] = [LAWS[0], LAWS[1], ...internal];
+
 // How each source looks as a document, and the sentence the scanner picks out.
 const DOCS: Record<string, { file: string; highlight: string }> = {
+  "eu-883": { file: "EUR-Lex_32004R0883.pdf", highlight: "subject to the legislation of that Member State" },
+  "be-law-1978": { file: "BE_Law_1978_Art70_EN.pdf", highlight: "within 8 weeks" },
   "policy-2026": { file: "BE_Sick_Leave_Policy_2026.pdf", highlight: "extended from 14 days to 8 weeks" },
   "manual-2023": { file: "Payroll_Manual_BE_v4.pdf", highlight: "more than 14 days after returning to work" },
   "nl-guide": { file: "Ziekteverzuim_NL.pdf", highlight: "within 4 weeks are added together" },
@@ -19,14 +56,16 @@ const DOCS: Record<string, { file: string; highlight: string }> = {
 
 const CONNECTORS = ["SharePoint", "Confluence", "Teams", "Outlook"];
 
-// Graph geometry in a 600x420 space.
+// Graph geometry in a 600x420 space: sources sit on an ellipse around the brain.
 const GW = 600;
 const GH = 420;
-const ANGLES = [-90, -30, 30, 90, 150, 210];
+const ANGLES = [-90, -45, 0, 45, 90, 135, 180, 225];
+const R = 175;
 const at = (angle: number, r: number) => ({
-  x: GW / 2 + r * Math.cos((angle * Math.PI) / 180),
-  y: GH / 2 + r * Math.sin((angle * Math.PI) / 180) * 0.72,
+  x: GW / 2 + r * 1.23 * Math.cos((angle * Math.PI) / 180),
+  y: GH / 2 + r * 0.77 * Math.sin((angle * Math.PI) / 180),
 });
+const STAGGER = 0.07;
 
 function useScrollProgress<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -115,12 +154,12 @@ export default function Demo() {
               >
                 <Graph search={search} />
                 <div className="absolute inset-x-0 bottom-0 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
-                  {search < 1 ? `Searching company knowledge · ${found}/6` : "6 sources found"}
+                  {search < 1 ? `Searching company knowledge and law · ${found}/${sources.length}` : `${sources.length} sources found`}
                 </div>
               </div>
 
               {/* Scene 3: the sources arrive as documents and get scanned */}
-              <div className="absolute inset-0 grid grid-cols-3 gap-3" style={{ opacity: docsIn > 0 ? 1 : 0 }}>
+              <div className="absolute inset-0 grid grid-cols-4 gap-2.5" style={{ opacity: docsIn > 0 ? 1 : 0 }}>
                 {sources.map((s, i) => (
                   <Page key={s.id} source={s} i={i} docsIn={docsIn} scan={scan} />
                 ))}
@@ -135,8 +174,8 @@ export default function Demo() {
 }
 
 // Each source is reached by the search in turn.
-const reach = (search: number, i: number) => seg(search, i * 0.1, i * 0.1 + 0.5);
-const scanOf = (scan: number, i: number) => seg(scan, i * 0.1, i * 0.1 + 0.45);
+const reach = (search: number, i: number) => seg(search, i * STAGGER, i * STAGGER + 0.5);
+const scanOf = (scan: number, i: number) => seg(scan, i * STAGGER, i * STAGGER + 0.45);
 
 function Steps({ step }: { step: number }) {
   const labels = ["Ask", "Search", "Documents"];
@@ -164,7 +203,7 @@ function Prompt({ typed, sent, docsIn, scan }: { typed: number; sent: boolean; d
               <div
                 key={s.id}
                 className="flex shrink-0 items-center gap-1.5 rounded-lg bg-neutral-100 px-2 py-1 transition-opacity"
-                style={{ opacity: seg(docsIn, i * 0.1, i * 0.1 + 0.4) }}
+                style={{ opacity: seg(docsIn, i * STAGGER, i * STAGGER + 0.4) }}
               >
                 <PdfIcon />
                 <div className="leading-tight">
@@ -209,7 +248,7 @@ function Graph({ search }: { search: number }) {
     <div className="relative mx-auto h-full w-full max-w-[600px]">
       <svg viewBox={`0 0 ${GW} ${GH}`} className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
         {sources.map((s, i) => {
-          const n = at(ANGLES[i], 175);
+          const n = at(ANGLES[i], R);
           const r = reach(search, i);
           const c = { x: GW / 2, y: GH / 2 };
           return (
@@ -232,7 +271,7 @@ function Graph({ search }: { search: number }) {
         })}
       </svg>
       {sources.map((s, i) => {
-        const n = at(ANGLES[i], 175);
+        const n = at(ANGLES[i], R);
         const r = reach(search, i);
         return (
           <div
@@ -241,6 +280,7 @@ function Graph({ search }: { search: number }) {
             style={{ left: `${(n.x / GW) * 100}%`, top: `${(n.y / GH) * 100}%` }}
           >
             <Ring v={r} />
+            <Flag country={s.country} />
             {s.short}
           </div>
         );
@@ -280,13 +320,13 @@ function Ring({ v }: { v: number }) {
   );
 }
 
-function Page({ source: s, i, docsIn, scan }: { source: Source; i: number; docsIn: number; scan: number }) {
-  const inV = seg(docsIn, i * 0.1, i * 0.1 + 0.5);
+function Page({ source: s, i, docsIn, scan }: { source: DemoSource; i: number; docsIn: number; scan: number }) {
+  const inV = seg(docsIn, i * STAGGER, i * STAGGER + 0.5);
   const v = scanOf(scan, i);
   const { highlight } = DOCS[s.id];
   const [before, after] = s.text.split(highlight);
   // Pages fly in from the brain in the middle of the stage.
-  const n = at(ANGLES[i], 175);
+  const n = at(ANGLES[i], R);
   const dx = (GW / 2 - n.x) * 0.5 * (1 - inV);
   const dy = (GH / 2 - n.y) * 0.5 * (1 - inV);
 
@@ -299,9 +339,10 @@ function Page({ source: s, i, docsIn, scan }: { source: Source; i: number; docsI
       }}
     >
       <div className="flex items-center justify-between border-b border-black/10 pb-1 font-mono text-[7px] uppercase tracking-widest text-neutral-400">
-        <span>{s.channel}</span>
-        <span>
-          {s.country} · {s.date.slice(0, 7)}
+        <span className="truncate">{s.channel}</span>
+        <span className="flex shrink-0 items-center gap-1">
+          <Flag country={s.country} size={9} />
+          {s.date.slice(0, 7)}
         </span>
       </div>
       <div className="mt-1.5 font-serif text-[12px] leading-tight">{s.title}</div>
@@ -341,6 +382,42 @@ function PdfIcon() {
       <text x="8" y="15.5" textAnchor="middle" fontSize="4.6" fontWeight="700" fill="#fff">
         PDF
       </text>
+    </svg>
+  );
+}
+
+function Flag({ country, size = 12 }: { country: Country; size?: number }) {
+  const w = Math.round(size * 1.4);
+  return (
+    <svg viewBox="0 0 21 15" width={w} height={size} className="shrink-0 overflow-hidden rounded-[2px] ring-1 ring-black/10" aria-label={country}>
+      {country === "BE" && (
+        <>
+          <rect width="7" height="15" fill="#1a1a1a" />
+          <rect x="7" width="7" height="15" fill="#fdda24" />
+          <rect x="14" width="7" height="15" fill="#ef3340" />
+        </>
+      )}
+      {country === "NL" && (
+        <>
+          <rect width="21" height="5" fill="#ae1c28" />
+          <rect y="5" width="21" height="5" fill="#fff" />
+          <rect y="10" width="21" height="5" fill="#21468b" />
+        </>
+      )}
+      {country === "EU" && (
+        <>
+          <rect width="21" height="15" fill="#003399" />
+          {Array.from({ length: 12 }, (_, k) => (
+            <circle
+              key={k}
+              cx={(10.5 + 4.6 * Math.cos((k * Math.PI) / 6)).toFixed(2)}
+              cy={(7.5 + 4.6 * Math.sin((k * Math.PI) / 6)).toFixed(2)}
+              r="0.75"
+              fill="#ffcc00"
+            />
+          ))}
+        </>
+      )}
     </svg>
   );
 }
