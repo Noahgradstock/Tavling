@@ -75,23 +75,45 @@ export function verifyPassword(userId: string, password: string): boolean {
   return safeEqual(actual, hash) && !!known;
 }
 
-// Failed login attempts per user id, in memory. Blocks brute force on one account.
-const MAX_ATTEMPTS = 5;
-const WINDOW_MS = 15 * 60 * 1000;
-const attempts = new Map<string, { count: number; resetAt: number }>();
+// Fixed-window counters in memory (per server instance). Used for login attempts and expensive routes.
+const buckets = new Map<string, { count: number; resetAt: number }>();
 
-export function loginBlocked(userId: string, now = Date.now()): boolean {
-  const a = attempts.get(userId);
-  return !!a && a.resetAt > now && a.count >= MAX_ATTEMPTS;
+export function overLimit(key: string, max: number, windowMs: number, now = Date.now()): boolean {
+  const b = buckets.get(key);
+  return !!b && b.resetAt > now && b.count >= max;
 }
 
-export function recordLoginFailure(userId: string, now = Date.now()) {
-  const a = attempts.get(userId);
-  if (!a || a.resetAt <= now) attempts.set(userId, { count: 1, resetAt: now + WINDOW_MS });
-  else a.count++;
+export function hit(key: string, windowMs: number, now = Date.now()) {
+  const b = buckets.get(key);
+  if (!b || b.resetAt <= now) buckets.set(key, { count: 1, resetAt: now + windowMs });
+  else b.count++;
+  if (buckets.size > 10_000) for (const [k, v] of buckets) if (v.resetAt <= now) buckets.delete(k);
 }
 
-export const clearLoginFailures = (userId: string) => attempts.delete(userId);
+// Allows `max` calls per window; returns false once the limit is reached.
+export function rateLimit(key: string, max: number, windowMs: number, now = Date.now()): boolean {
+  if (overLimit(key, max, windowMs, now)) return false;
+  hit(key, windowMs, now);
+  return true;
+}
+
+// Failed logins: 5 per account per IP, and 50 per IP overall, per 15 minutes.
+// Keying on account + IP means a stranger cannot lock a colleague out by guessing wrong on purpose.
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+
+export function loginBlocked(userId: string, ip = "unknown", now = Date.now()): boolean {
+  return overLimit(`login:${userId}|${ip}`, 5, LOGIN_WINDOW_MS, now) || overLimit(`login-ip:${ip}`, 50, LOGIN_WINDOW_MS, now);
+}
+
+export function recordLoginFailure(userId: string, ip = "unknown", now = Date.now()) {
+  hit(`login:${userId}|${ip}`, LOGIN_WINDOW_MS, now);
+  hit(`login-ip:${ip}`, LOGIN_WINDOW_MS, now);
+}
+
+export const clearLoginFailures = (userId: string, ip = "unknown") => buckets.delete(`login:${userId}|${ip}`);
+
+// Client IP as set by the hosting proxy (Vercel puts the real client first).
+export const clientIp = (request: Request) => request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
 
 export function readCookie(request: Request, name: string): string | null {
   for (const part of (request.headers.get("cookie") ?? "").split(";")) {

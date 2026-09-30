@@ -75,10 +75,11 @@ The live demo runs on Vercel (project `tavling`). Pushing to GitHub does not dep
 
 Built for the checks of the Aikido AI Code Audit: authentication, authorization, IDOR and business logic.
 
-- **Login:** every page and API route needs a session (`src/proxy.ts`), and each route handler checks it again (`currentUser()` in `src/lib/trust-server.ts`).
+- **Login:** every page and API route needs a session (`src/proxy.ts`), and each route handler and data page checks it again (`currentUser()` in `src/lib/trust-server.ts`, `requireUser()` in `src/lib/session.ts`).
 - **Sessions:** signed cookie (HMAC-SHA256), `HttpOnly`, `SameSite=Strict`, `Secure` in production, valid for 8 hours (`src/lib/auth.ts`).
-- **Passwords:** scrypt hashes only, constant-time comparison, 5 failed attempts block an account for 15 minutes.
-- **Voting:** the voter is always the signed-in user from the session, never a value sent by the browser. One vote per user per claim. Users who left the company cannot sign in.
+- **Passwords:** scrypt hashes only, constant-time comparison. 5 failed attempts block that account from that IP for 15 minutes (so nobody can lock a colleague out), 50 per IP overall.
+- **Voting:** the voter is always the signed-in user from the session, never a value sent by the browser. One vote per user per claim, and only for a case the source actually applies to, so nobody can hide a source for another country, sector or client. Users who left the company cannot sign in.
+- **Abuse limits:** 30 questions and 60 votes per user per minute; request bodies over 10 KB are refused.
 - **CSRF:** POST routes refuse requests from another origin.
 - **AI privacy:** names, clients, ages and identifiers are masked before a question is sent to Gemini (`src/lib/privacy.ts`), and Gemini never sees the sources or scores anything.
 - **Headers:** `X-Frame-Options`, `Content-Security-Policy: frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS (`next.config.ts`).

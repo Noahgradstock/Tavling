@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import {
   authConfigured,
   clearLoginFailures,
+  clientIp,
   cookieOptions,
   createSession,
   loginBlocked,
@@ -22,15 +23,16 @@ export async function POST(request: Request) {
   const password = typeof body?.password === "string" ? body.password.slice(0, 200) : "";
   if (!username || !password) return Response.json({ error: "Username and password are required" }, { status: 400 });
 
-  if (loginBlocked(username)) return Response.json({ error: "Too many attempts, try again in 15 minutes" }, { status: 429 });
+  const ip = clientIp(request);
+  if (loginBlocked(username, ip)) return Response.json({ error: "Too many attempts, try again in 15 minutes" }, { status: 429 });
 
   const person = kb.people.find((p) => p.id === username && !p.left);
   if (!verifyPassword(username, password) || !person) {
-    recordLoginFailure(username);
+    recordLoginFailure(username, ip);
     return Response.json({ error: "Wrong username or password" }, { status: 401 });
   }
 
-  clearLoginFailures(username);
+  clearLoginFailures(username, ip);
   (await cookies()).set(SESSION_COOKIE, createSession(person.id), cookieOptions);
   return Response.json({ user: { id: person.id, name: person.name, role: person.role } });
 }

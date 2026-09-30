@@ -3,6 +3,7 @@ import { readdirSync } from "node:fs";
 import path from "node:path";
 import { evaluateFact } from "@/trust-engine";
 import { feedbackStore, kb, now } from "@/lib/trust-server";
+import { requireUser } from "@/lib/session";
 import BrainMap, { type BrainData } from "./brain-map";
 
 export const metadata: Metadata = {
@@ -24,7 +25,8 @@ function listFiles(dir: string, base = dir): string[] {
   }
 }
 
-export default function BrainPage() {
+export default async function BrainPage() {
+  await requireUser();
   const client = kb.clients.find((c) => c.id === REFERENCE_CLIENT) ?? kb.clients[0];
   const ctx = { country: client.country, pc: client.pc, client: client.id };
   const feedback = feedbackStore.all();
