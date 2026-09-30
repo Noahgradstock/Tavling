@@ -7,12 +7,14 @@ import type { AskResult, Client, FeedbackKind } from "@/trust-engine";
 import { cardsOf, seg, useTimeline } from "@/lib/demo-shared";
 import Funnel, { funnelLayers, funnelStage, LAYERS } from "./funnel";
 import ScanStage, { scannedCount } from "./scan";
+import ConnectStage, { connectText } from "./connect";
 import { Result } from "./result";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
-const THINKING_MS = 10_000;
-const SCAN = 0.35; // first part of thinking: scan the documents, then sort them
+const THINKING_MS = 12_000;
+const CONNECT = 0.16; // first: search the connected systems
+const SCAN = 0.42; // then scan the documents, then sort them
 
 type Ctx = { client?: string; country?: string; pc?: string };
 type Example = { question: string; context: Ctx };
@@ -196,8 +198,10 @@ export default function Ask() {
           </div>
           <Thinking p={p} loading={loading} hit={hit} n={cards.length} />
           {hit ? (
-            p < SCAN ? (
-              <ScanStage cards={cards} q={seg(p, 0, SCAN)} />
+            p < CONNECT ? (
+              <ConnectStage cards={cards} q={seg(p, 0, CONNECT)} />
+            ) : p < SCAN ? (
+              <ScanStage cards={cards} q={seg(p, CONNECT, SCAN)} />
             ) : (
               <Funnel hit={hit} cards={cards} q={seg(p, SCAN, 1)} onSelect={() => {}} minimal />
             )
@@ -248,8 +252,10 @@ function Thinking({ p, loading, hit, n }: { p: number; loading: boolean; hit: As
   const text =
     loading || !h
       ? "Reading your question…"
-      : p < SCAN
-        ? `Scanning ${n} documents · ${scannedCount(seg(p, 0, SCAN), n)} done`
+      : p < CONNECT
+        ? connectText
+        : p < SCAN
+        ? `Found ${n} documents · reading them for what answers your question · ${scannedCount(seg(p, CONNECT, SCAN), n)}/${n}`
         : stage === 0
         ? `Found ${h.claims.length + h.excluded.length} sources that mention this`
         : stage === 1
