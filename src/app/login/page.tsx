@@ -27,6 +27,18 @@ export default function Login() {
     }
   }
 
+  async function guest() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/guest", { method: "POST" });
+      if (res.ok) return router.replace("/");
+      setError(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Guest access failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#e9e8e6] to-[#dddcd9] px-4 text-[#161616]">
       <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-3 rounded-2xl bg-white p-6 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.18)]">
@@ -59,6 +71,14 @@ export default function Login() {
           className="mt-1 rounded-full bg-[#161616] px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-white disabled:opacity-50"
         >
           {busy ? "Signing in…" : "Sign in"}
+        </button>
+        <button
+          type="button"
+          onClick={guest}
+          disabled={busy}
+          className="rounded-full border border-black/10 px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-neutral-600 hover:border-black/30 disabled:opacity-50"
+        >
+          Continue as guest
         </button>
       </form>
     </main>

@@ -137,7 +137,7 @@ export function Result({
               </Chips>
             </Step>
           )}
-          <Step n={hit.excluded.length ? 3 : 2} title={`Scored the other ${hit.claims.length} on six trust layers`}>
+          <Step n={hit.excluded.length ? 3 : 2} title={`Scored ${hit.excluded.length ? "the other" : "all"} ${hit.claims.length} on six trust layers`}>
             <span className="text-neutral-500">
               Who wrote it, how recent it is, who agrees, whether it matches the law, whether it fits this client, and user feedback.{" "}
               {trustedCount} passed the 75% bar.

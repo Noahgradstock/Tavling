@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth";
 
-// Everything except the login page and the login endpoint needs a valid session.
+// Everything except the login page and the login/guest endpoints needs a valid session.
 // Route handlers check the session again (defense in depth), this is the first gate.
-const PUBLIC = new Set(["/login", "/api/auth/login"]);
+const PUBLIC = new Set(["/login", "/api/auth/login", "/api/auth/guest"]);
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

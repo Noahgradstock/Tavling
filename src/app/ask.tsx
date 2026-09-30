@@ -4,24 +4,43 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { customer } from "@/lib/knowledge";
 import type { AskResult, Client, FeedbackKind } from "@/trust-engine";
-import { cardsOf, useTimeline } from "@/lib/demo-shared";
+import { cardsOf, seg, useTimeline } from "@/lib/demo-shared";
 import Funnel, { funnelLayers, funnelStage, LAYERS } from "./funnel";
+import ScanStage, { scannedCount } from "./scan";
 import { Result } from "./result";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
-const THINKING_MS = 7_000;
+const THINKING_MS = 10_000;
+const SCAN = 0.35; // first part of thinking: scan the documents, then sort them
 
 type Ctx = { client?: string; country?: string; pc?: string };
 type Example = { question: string; context: Ctx };
 
 // Cases without a client: pick by country and sector.
 const GENERAL: { key: string; label: string; ctx: Ctx }[] = [
-  { key: "be-200", label: "Belgium · PC 200 (no client)", ctx: { country: "BE", pc: "200" } },
-  { key: "be", label: "Belgium (no client)", ctx: { country: "BE" } },
-  { key: "nl", label: "Netherlands (no client)", ctx: { country: "NL" } },
+  { key: "be-200", label: "Belgium · PC 200", ctx: { country: "BE", pc: "200" } },
+  { key: "be", label: "Belgium", ctx: { country: "BE" } },
+  { key: "nl", label: "Netherlands", ctx: { country: "NL" } },
 ];
 const DEMO_CASE: Example = { question: customer.question, context: { client: "brouwerij-de-kroon" } };
+
+// No case is open in the demo, so the client, country and sector are read from the question itself.
+// In production they come from the consultant's open case.
+function inferContext(q: string, clients: Client[]): Ctx {
+  const text = q.toLowerCase();
+  const client = clients.find((c) =>
+    c.name
+      .toLowerCase()
+      .replace(/\b(nv|bv|bvba)\b/g, "")
+      .split(/\s+/)
+      .some((w) => w.length > 4 && w !== "brouwerij" && w !== "bakkerij" && text.includes(w)),
+  );
+  if (client) return { client: client.id };
+  const country = /\b(netherlands|nederland|dutch|holland|nl)\b/.test(text) ? "NL" : "BE";
+  const pc = text.match(/\bpc\s?(\d{3})\b/)?.[1];
+  return pc && country === "BE" ? { country, pc } : { country };
+}
 
 export default function Ask() {
   const router = useRouter();
@@ -50,7 +69,6 @@ export default function Ask() {
 
   const ctxKey = ctx.client ?? GENERAL.find((g) => g.ctx.country === ctx.country && g.ctx.pc === ctx.pc)?.key ?? "be";
   const ctxName = ctx.client ? (clients.find((c) => c.id === ctx.client)?.name ?? ctx.client) : GENERAL.find((g) => g.key === ctxKey)?.label ?? "";
-  const setCtxKey = (key: string) => setCtx(GENERAL.find((g) => g.key === key)?.ctx ?? { client: key });
 
   async function fetchAnswer(q: string, c: Ctx) {
     const res = await fetch("/api/trust/ask", {
@@ -62,7 +80,8 @@ export default function Ask() {
     return (await res.json()) as AskResult;
   }
 
-  async function ask(q = question, c = ctx) {
+  async function ask(q = question, explicit?: Ctx) {
+    const c = explicit ?? inferContext(q, clients);
     if (!q.trim() || loading) return;
     setCtx(c);
     setAsked(q);
@@ -92,20 +111,6 @@ export default function Ask() {
     setQuestion("");
   }
 
-  const clientOptions = (
-    <select value={ctxKey} onChange={(e) => setCtxKey(e.target.value)} className="cursor-pointer bg-transparent font-medium text-neutral-700 outline-none">
-      {clients.map((c) => (
-        <option key={c.id} value={c.id}>
-          {c.name}
-        </option>
-      ))}
-      {GENERAL.map((g) => (
-        <option key={g.key} value={g.key}>
-          {g.label}
-        </option>
-      ))}
-    </select>
-  );
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-5 text-[#161616]">
@@ -139,8 +144,7 @@ export default function Ask() {
               placeholder="Ask a payroll or HR question, in any language…"
             />
             <div className="mt-2 flex items-center gap-3 text-sm">
-              <span className="text-neutral-400">For</span>
-              {clientOptions}
+<span className="text-xs text-neutral-400">Mention a client or country if it matters, e.g. “for Bakkerij Janssens”.</span>
               <button
                 disabled={!question.trim()}
                 className="ml-auto rounded-full bg-[#161616] px-5 py-2 font-medium text-white transition hover:bg-black disabled:bg-neutral-200 disabled:text-neutral-400"
@@ -163,7 +167,7 @@ export default function Ask() {
                   <span className="shrink-0 text-xs text-neutral-400">
                     {ex.context.client
                       ? clients.find((c) => c.id === ex.context.client)?.name
-                      : GENERAL.find((g) => g.ctx.country === ex.context.country && g.ctx.pc === ex.context.pc)?.label.replace(" (no client)", "")}
+                      : GENERAL.find((g) => g.ctx.country === ex.context.country && g.ctx.pc === ex.context.pc)?.label.replace("", "")}
                   </span>
                   <span className="text-neutral-300 group-hover:text-neutral-900">→</span>
                 </button>
@@ -179,9 +183,13 @@ export default function Ask() {
             <div className="text-xs text-neutral-400">You asked · {ctxName}</div>
             <div className="mt-0.5 line-clamp-2 text-neutral-700">{asked}</div>
           </div>
-          <Thinking p={p} loading={loading} hit={hit} />
+          <Thinking p={p} loading={loading} hit={hit} n={cards.length} />
           {hit ? (
-            <Funnel hit={hit} cards={cards} q={p} onSelect={() => {}} minimal />
+            p < SCAN ? (
+              <ScanStage cards={cards} q={seg(p, 0, SCAN)} />
+            ) : (
+              <Funnel hit={hit} cards={cards} q={seg(p, SCAN, 1)} onSelect={() => {}} minimal />
+            )
           ) : (
             <div className="h-[380px]" />
           )}
@@ -220,15 +228,18 @@ export default function Ask() {
 }
 
 // One plain sentence that says what the brain is doing right now.
-function Thinking({ p, loading, hit }: { p: number; loading: boolean; hit: AskResult | null }) {
+function Thinking({ p, loading, hit, n }: { p: number; loading: boolean; hit: AskResult | null; n: number }) {
   const h = hit?.matched ? hit : null;
-  const stage = funnelStage(p);
-  const layers = funnelLayers(p);
+  const q = seg(p, SCAN, 1);
+  const stage = funnelStage(q);
+  const layers = funnelLayers(q);
   const layer = LAYERS[Math.max(0, layers - 1)];
   const text =
     loading || !h
       ? "Reading your question…"
-      : stage === 0
+      : p < SCAN
+        ? `Scanning ${n} documents · ${scannedCount(seg(p, 0, SCAN), n)} done`
+        : stage === 0
         ? `Found ${h.claims.length + h.excluded.length} sources that mention this`
         : stage === 1
           ? `Checking every source · ${layer.name}: ${layer.q.toLowerCase()}`

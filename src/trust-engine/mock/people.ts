@@ -12,6 +12,7 @@ export const people: Person[] = [
   { id: "lars", name: "Lars de Vries", role: "expert", team: "Payroll NL" },
   { id: "sanne", name: "Sanne de Vries", role: "expert", team: "Legal Payroll NL" },
   { id: "emma", name: "Emma Bakker", role: "regular", team: "Payroll NL" },
+  { id: "guest", name: "Guest", role: "regular", team: "Demo visitor" },
 ];
 
 export const clients: Client[] = [
