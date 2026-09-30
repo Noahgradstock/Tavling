@@ -70,7 +70,8 @@ export const shortReason = (reason: string) =>
         ? "Other client"
         : "Reported not applicable";
 
-// Drives an animation from 0 to 1 over `duration` ms each time `run` changes. skip() jumps to the end.
+// Drives an animation from 0 to 1 over `duration` ms each time `run` changes. skip() jumps to the end,
+// seek(v) pauses at v so one step can be inspected.
 export function useTimeline(run: number, duration: number) {
   const [p, setP] = useState(0);
   const raf = useRef(0);
@@ -89,7 +90,11 @@ export function useTimeline(run: number, duration: number) {
     cancelAnimationFrame(raf.current);
     setP(1);
   }, []);
-  return [p, skip] as const;
+  const seek = useCallback((v: number) => {
+    cancelAnimationFrame(raf.current);
+    setP(clamp(v));
+  }, []);
+  return [p, skip, seek] as const;
 }
 
 export function PdfIcon() {

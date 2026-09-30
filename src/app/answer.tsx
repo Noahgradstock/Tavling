@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FactStatus, FeedbackKind, Person, ScoredClaim, Claim } from "@/trust-engine";
 import { CHANNEL, pct, type Hit } from "@/lib/demo-shared";
+import { References, SourceFile } from "./extras";
 
 // The answer: one value with its trust score, details on demand, feedback and the expert to ask.
 
@@ -84,12 +85,17 @@ export function AnswerCard({ hit, onVote, onSelect }: { hit: Hit; onVote: (id: s
         </div>
       </div>
 
-      <p className="text-[15px] leading-relaxed text-neutral-700">{best.claim.text}</p>
+      <p className="text-[15px] leading-relaxed text-neutral-700">
+        {best.claim.text}
+        <sup className="ml-0.5 font-mono text-[10px] text-[#1463ff]">[1]</sup>
+      </p>
 
       <div className="text-xs text-neutral-500">
         {best.claim.source.title}
         {best.claim.author && ` · ${people[best.claim.author]?.name}`} · {best.claim.date}
       </div>
+
+      <References hit={hit} onSelect={onSelect} />
 
       {status === "orphan" && (
         <p className="rounded-xl bg-neutral-50 p-3 text-xs text-neutral-600">No expert or official source backs this yet. Treat it as a lead, not an answer.</p>
@@ -194,6 +200,7 @@ export function ClaimPanel({
         </div>
       </div>
       <p className="rounded-2xl bg-neutral-50 p-3 text-sm italic text-neutral-700">“{c.claim.text}”</p>
+      <SourceFile claimId={c.claim.id} file={c.claim.file} />
       <EvidenceList c={c} />
       <div className="border-t border-neutral-100 pt-3">
         <Votes onVote={(k) => onVote(c.claim.id, k)} />
