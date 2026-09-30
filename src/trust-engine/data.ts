@@ -59,15 +59,51 @@ function teamsQuote(fileText: string, author: string | undefined, date: string, 
   }
 }
 
-// The line in the file that states the value: that is the quote the brain shows.
+// The sentence in the file that states the value: that is the quote the brain shows.
+// Wrapped lines are joined first so a sentence is never cut in half.
 function quote(fileText: string, value: string): string | null {
   const norm = (s: string) => s.toLowerCase().replace(/,/g, ".").replace(/\s+/g, " ");
   const needle = norm(value.split(" ")[0]);
-  const line = fileText
-    .split("\n")
-    .map((l) => l.replace(/^[\s>#*\-|]+/, "").replace(/^"(text|message|body)":\s*"/, "").replace(/",?$/, "").trim())
-    .find((l) => l.length > 8 && norm(l).includes(needle));
-  return line ? (line.length > 240 ? `${line.slice(0, 237)}…` : line) : null;
+  const sentences = fileText
+    .replace(/<[^>]+>/g, " ")
+    .split(/\n\s*\n/)
+    // Skip email header blocks (From:, To:, Subject: …).
+    .filter((para) => !/^(From|To|Date|Subject|Message-ID|MIME-Version|Content-[\w-]+):/m.test(para))
+    .map((para) => para.split("\n").map((l) => l.replace(/^[\s>#*\-|]+/, "").trim()).join(" "))
+    .flatMap((para) => para.split(/(?<=[.!?])\s+(?=[A-Z0-9"“])/))
+    .map((x) => x.replace(/\s+/g, " ").trim())
+    .filter((x) => !/^\d+\.?$/.test(x)); // drop list numbers like "3."
+  const k = sentences.findIndex((x) => x.length > 8 && norm(x).includes(needle));
+  if (k < 0) return null;
+  const text = sentences[k];
+  return text.length > 260 ? `${text.slice(0, 257)}…` : text;
+}
+
+// The full source behind a claim, for the document viewer. Teams exports become a message list.
+export type SourceDoc =
+  | { kind: "messages"; file: string; messages: { author: string; date: string; text: string }[] }
+  | { kind: "text"; file: string; text: string }
+  | { kind: "none" };
+
+export function readSource(claim: Claim): SourceDoc {
+  if (!claim.file) return { kind: "none" };
+  const raw = read(claim.file);
+  if (!raw) return { kind: "none" };
+  if (claim.file.endsWith(".json")) {
+    try {
+      const flat: TeamsMessage[] = [];
+      const walk = (m: TeamsMessage) => (flat.push(m), (m.replies ?? []).forEach(walk));
+      (JSON.parse(raw).value as TeamsMessage[]).forEach(walk);
+      return {
+        kind: "messages",
+        file: claim.file,
+        messages: flat.map((m) => ({ author: m.from?.user?.displayName ?? "Unknown", date: m.createdDateTime, text: stripHtml(m.body?.content ?? "") })),
+      };
+    } catch {
+      /* fall through to plain text */
+    }
+  }
+  return { kind: "text", file: claim.file, text: raw.replace(/<[^>]+>/g, "") };
 }
 
 export function loadDataKnowledgeBase(): { kb: KnowledgeBase; testQuestions: TestQuestion[] } {

@@ -33,11 +33,29 @@ const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
 type Place = { col: number; mode: "found" | "scoring" | "trusted" | "best" | "dropped"; reason?: string };
 
 export const funnelStage = (q: number) => (q < 0.1 ? 0 : q < 0.65 ? 1 : q < 0.82 ? 2 : 3);
+// How many of the six layers have been applied at q.
+export const funnelLayers = (q: number) => {
+  const stage = funnelStage(q);
+  return stage === 1 ? Math.min(6, Math.floor(seg(q, 0.12, 0.6) * 6.999)) : stage > 1 ? 6 : 0;
+};
+export { LAYERS };
 
-export default function Funnel({ hit, cards, q, onSelect }: { hit: Hit; cards: DocCard[]; q: number; onSelect: (id: string) => void }) {
+export default function Funnel({
+  hit,
+  cards,
+  q,
+  onSelect,
+  minimal = false,
+}: {
+  hit: Hit;
+  cards: DocCard[];
+  q: number;
+  onSelect: (id: string) => void;
+  minimal?: boolean; // hide the six layer tiles (a caption explains them instead)
+}) {
   const appear = seg(q, 0, 0.06);
   const stage = funnelStage(q);
-  const layers = stage === 1 ? Math.min(6, Math.floor(seg(q, 0.12, 0.6) * 6.999)) : stage > 1 ? 6 : 0;
+  const layers = funnelLayers(q);
 
   const scored = (id: string): ScoredClaim | undefined => hit.claims.find((c) => c.claim.id === id);
   const excluded = (id: string) => hit.excluded.find((e) => e.claim.id === id);
@@ -75,7 +93,7 @@ export default function Funnel({ hit, cards, q, onSelect }: { hit: Hit; cards: D
   return (
     <div className="flex flex-col">
       {/* The six criteria from the trust engine, lit as each one is applied */}
-      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+      <div className={`grid grid-cols-3 gap-1.5 sm:grid-cols-6 ${minimal ? "hidden" : ""}`}>
         {LAYERS.map((l, i) => {
           const on = layers > i;
           const current = stage === 1 && layers - 1 === i;
@@ -98,7 +116,7 @@ export default function Funnel({ hit, cards, q, onSelect }: { hit: Hit; cards: D
       </div>
 
       {/* The funnel: documents move left to right and get fewer */}
-      <div className="relative mt-4" style={{ opacity: appear, height: DROP_TOP + maxDropped * (DROP_H + 4) + 8 }}>
+      <div className={`relative ${minimal ? "" : "mt-4"}`} style={{ opacity: appear, height: DROP_TOP + maxDropped * (DROP_H + 4) + 8 }}>
         <svg viewBox="0 0 100 460" preserveAspectRatio="none" className="absolute inset-x-0 top-0 h-[460px] w-full" aria-hidden>
           <polygon points="0,44 18.5,44 62.5,80 82.5,120 100,120 100,290 82.5,290 62.5,330 18.5,362 0,362" fill="#fff" fillOpacity="0.35" />
           {[18.5, 62.5, 82.5].map((x) => (
