@@ -31,16 +31,6 @@ const GENERAL: { key: string; label: string; ctx: Ctx }[] = [
 ];
 const DEMO_CASE: Example = { question: customer.question, context: { client: "brouwerij-de-kroon" }, label: "Sick leave: do we pay again?" };
 
-// A handful of examples that show different outcomes: official rule, client exception, other country, disagreement.
-const FEATURED: Example[] = [
-  DEMO_CASE,
-  { label: "Indexation for Bakkerij Janssens", question: "What is the indexation for Bakkerij Janssens?", context: { client: "bakkerij-janssens" } },
-  { label: "Company car minimum benefit 2026", question: "What is the minimum benefit in kind for a company car in 2026?", context: { country: "BE" } },
-  { label: "TechStart's telework allowance", question: "What telework allowance does TechStart pay?", context: { client: "techstart-gent" } },
-  { label: "Maternity leave in the Netherlands", question: "How long is maternity leave in the Netherlands?", context: { country: "NL" } },
-  { label: "Cut-off for variable pay", question: "What is the cut-off for variable pay input?", context: { country: "BE" } },
-];
-
 // No case is open in the demo, so the client, country and sector are read from the question itself.
 // In production they come from the consultant's open case.
 function inferContext(q: string, clients: Client[]): Ctx {
@@ -64,7 +54,6 @@ export default function Ask() {
   const [asked, setAsked] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
   const [examples, setExamples] = useState<Example[]>([]);
-  const [showAll, setShowAll] = useState(false);
   const [ctx, setCtx] = useState<Ctx>({ client: "brouwerij-de-kroon" });
   const [result, setResult] = useState<AskResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -185,25 +174,21 @@ export default function Ask() {
             </div>
           </form>
 
-          <div className="mt-8">
-            <div className="text-sm text-neutral-500">Try an example</div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(showAll ? [DEMO_CASE, ...examples] : FEATURED).map((ex, i) => (
+          <div className="mt-10">
+            <div className="text-xs text-neutral-400">Example questions from our test data. Click one to try it.</div>
+            <div className="mt-3 flex flex-col divide-y divide-neutral-200/70">
+              {[DEMO_CASE, ...examples].map((ex, i) => (
                 <button
                   key={i}
                   onClick={() => ask(ex.question, ex.context)}
-                  className="rounded-full border border-neutral-200 bg-white/60 px-3.5 py-1.5 text-left text-sm text-neutral-700 transition hover:border-neutral-400 hover:bg-white hover:text-black"
+                  className="group flex items-center gap-4 py-2.5 text-left text-sm"
                 >
-                  {ex.label ?? ex.question}
-                  <span className="ml-2 text-xs text-neutral-400">{contextLabel(ex.context)}</span>
+                  <span className="min-w-0 flex-1 truncate text-neutral-700 group-hover:text-black">{ex.question}</span>
+                  <span className="shrink-0 text-xs text-neutral-400">{contextLabel(ex.context)}</span>
+                  <span className="text-neutral-300 group-hover:text-neutral-900">→</span>
                 </button>
               ))}
             </div>
-            {examples.length > 0 && (
-              <button onClick={() => setShowAll(!showAll)} className="mt-3 text-xs text-neutral-400 hover:text-neutral-800">
-                {showAll ? "Fewer examples" : `All ${examples.length + 1} test questions →`}
-              </button>
-            )}
           </div>
         </div>
       )}
