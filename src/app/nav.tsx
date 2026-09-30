@@ -10,6 +10,7 @@ const TABS = [
 
 export default function Nav() {
   const path = usePathname();
+  if (path === "/login") return null;
   return (
     <nav aria-label="Main" className="fixed left-4 top-4 z-50 flex gap-0.5 rounded-full bg-white/80 p-1 text-xs shadow-[0_1px_3px_rgba(0,0,0,0.08)] backdrop-blur">
       {TABS.map((t) => {

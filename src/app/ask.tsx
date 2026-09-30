@@ -48,6 +48,7 @@ export default function Ask() {
   const [asked, setAsked] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
   const [examples, setExamples] = useState<Example[]>([]);
+  const [countries, setCountries] = useState<string[]>([]);
   const [ctx, setCtx] = useState<Ctx>({ client: "brouwerij-de-kroon" });
   const [result, setResult] = useState<AskResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,13 @@ export default function Ask() {
       .then((m) => {
         setClients(m.clients);
         setExamples(m.examples);
+        setCountries(m.countries ?? []);
+        // Start on a client this user works on.
+        setCtx((c) =>
+          c.client && !m.clients.some((x: Client) => x.id === c.client)
+            ? m.clients[0] ? { client: m.clients[0].id } : { country: m.countries?.[0] }
+            : c,
+        );
       });
   }, []);
 

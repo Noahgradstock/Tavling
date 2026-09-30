@@ -24,15 +24,15 @@ export async function POST(request: Request) {
   if (!username || !password) return Response.json({ error: "Username and password are required" }, { status: 400 });
 
   const ip = clientIp(request);
-  if (loginBlocked(username, ip)) return Response.json({ error: "Too many attempts, try again in 15 minutes" }, { status: 429 });
+  if (await loginBlocked(username, ip)) return Response.json({ error: "Too many attempts, try again in 15 minutes" }, { status: 429 });
 
   const person = kb.people.find((p) => p.id === username && !p.left);
   if (!verifyPassword(username, password) || !person) {
-    recordLoginFailure(username, ip);
+    await recordLoginFailure(username, ip);
     return Response.json({ error: "Wrong username or password" }, { status: 401 });
   }
 
-  clearLoginFailures(username, ip);
+  await clearLoginFailures(username, ip);
   (await cookies()).set(SESSION_COOKIE, createSession(person.id), cookieOptions);
   return Response.json({ user: { id: person.id, name: person.name, role: person.role } });
 }

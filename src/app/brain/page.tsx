@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { readdirSync } from "node:fs";
 import path from "node:path";
 import { evaluateFact } from "@/trust-engine";
-import { feedbackStore, kb, now } from "@/lib/trust-server";
+import { allFeedback, kb, now } from "@/lib/trust-server";
+import { canReadClaim, clientsOf, countriesOf } from "@/lib/access";
 import { requireUser } from "@/lib/session";
 import { DOC_FOLDERS, loadDocuments } from "@/lib/documents";
 import BrainMap, { type BrainData } from "./brain-map";
@@ -27,14 +28,19 @@ function listFiles(dir: string, base = dir): string[] {
 }
 
 export default async function BrainPage() {
-  await requireUser();
-  const client = kb.clients.find((c) => c.id === REFERENCE_CLIENT) ?? kb.clients[0];
-  const ctx = { country: client.country, pc: client.pc, client: client.id };
-  const feedback = feedbackStore.all();
+  const user = await requireUser();
+  // Scored for a client this user works on (the reference client if they have it), otherwise their country.
+  const mine = clientsOf(user, kb);
+  const client = mine.find((c) => c.id === REFERENCE_CLIENT) ?? mine[0] ?? null;
+  const ctx = client ? { country: client.country, pc: client.pc, client: client.id } : { country: countriesOf(user)[0] ?? "BE" };
+  const feedback = await allFeedback();
+  const visible = kb.claims.filter((c) => canReadClaim(user, c, kb));
+  const shown = new Set(visible.map((c) => c.file));
+  const hiddenFiles = new Set(kb.claims.filter((c) => c.file && !shown.has(c.file)).map((c) => c.file));
 
   const topics = kb.facts.map((fact) => {
     const r = evaluateFact(fact, kb, ctx, feedback, now());
-    const all = kb.claims.filter((c) => c.factKey === fact.key);
+    const all = visible.filter((c) => c.factKey === fact.key);
     return {
       key: fact.key,
       label: fact.label,
@@ -61,7 +67,7 @@ export default async function BrainPage() {
 
   const data: BrainData = {
     company: "SD Worx",
-    reference: `${client.name} (${[client.country, client.pc && `PC ${client.pc}`].filter(Boolean).join(", ")})`,
+    reference: client ? `${client.name} (${[client.country, client.pc && `PC ${client.pc}`].filter(Boolean).join(", ")})` : ctx.country,
     topics,
     people: kb.people.map((p) => ({
       id: p.id,
@@ -69,15 +75,15 @@ export default async function BrainPage() {
       role: p.role,
       team: p.team,
       left: !!p.left,
-      claims: kb.claims.filter((c) => c.author === p.id).length,
+      claims: visible.filter((c) => c.author === p.id).length,
     })),
-    clients: kb.clients.map((c) => ({ ...c, claims: kb.claims.filter((x) => x.scope.client === c.id).length })),
+    clients: mine.map((c) => ({ ...c, claims: visible.filter((x) => x.scope.client === c.id).length })),
     channels: (["official", "sharepoint", "teams", "email"] as const).map((type) => ({
       type,
-      claims: kb.claims.filter((c) => c.source.type === type).length,
+      claims: visible.filter((c) => c.source.type === type).length,
     })),
-    files: listFiles(path.join(process.cwd(), "data", "salary")),
-    documents: loadDocuments(kb),
+    files: listFiles(path.join(process.cwd(), "data", "salary")).filter((f) => !hiddenFiles.has(f)),
+    documents: loadDocuments(kb).filter((d) => !hiddenFiles.has(d.path)),
     folders: DOC_FOLDERS,
     scores: Object.fromEntries(topics.flatMap((t) => t.claims.map((c) => [c.id, { score: c.score, excluded: c.excluded }]))),
   };
