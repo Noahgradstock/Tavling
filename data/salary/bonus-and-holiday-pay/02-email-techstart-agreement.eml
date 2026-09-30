@@ -1,0 +1,28 @@
+From: Jan Wouters <jan.wouters@sdworx.com>
+To: Payroll BE <payroll-be@sdworx.com>
+Date: Tue, 14 Oct 2025 11:22:09 +0200
+Subject: TechStart Gent - end-of-year bonus paid in November
+Message-ID: <20251014112209.3391@sdworx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Hi team,
+
+Short note for whoever handles TechStart Gent BV (PC 200).
+
+TechStart has a company agreement (ondernemingscao, signed 03/03/2022)
+that pays the end-of-year bonus with the November payroll instead of
+December. The amount is the same as the sector rule (one gross monthly
+salary, pro rata).
+
+Please set the payment month to 11 in their payroll parameters. I checked
+the agreement myself, it is in the client file under "CAO's".
+
+This only applies to TechStart. All other PC 200 clients stay on December.
+
+Jan
+
+Jan Wouters
+Senior Payroll Consultant | Payroll BE
+SD Worx Belgium

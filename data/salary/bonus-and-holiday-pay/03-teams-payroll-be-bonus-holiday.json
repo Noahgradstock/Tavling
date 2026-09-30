@@ -1,0 +1,39 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1732093200140",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2025-11-20T09:00:00.140Z",
+      "from": { "user": { "id": "u-smaes", "displayName": "Sofie Maes" } },
+      "body": { "contentType": "html", "content": "<p>End-of-year bonus PC 200 goes out with the December payroll, just so everyone plans the run correctly.</p>" },
+      "attachments": [],
+      "reactions": [
+        { "reactionType": "like", "user": { "user": { "id": "u-adesmet", "displayName": "Anna De Smet" } } }
+      ],
+      "replies": [
+        {
+          "id": "1732094400563",
+          "replyToId": "1732093200140",
+          "createdDateTime": "2025-11-20T09:20:00.563Z",
+          "from": { "user": { "id": "u-pjacobs", "displayName": "Pieter Jacobs" } },
+          "body": { "contentType": "html", "content": "<p>also for TechStart?</p>" },
+          "attachments": [],
+          "reactions": []
+        }
+      ]
+    },
+    {
+      "id": "1743584520775",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-04-02T09:02:00.775Z",
+      "from": { "user": { "id": "u-tclaes", "displayName": "Tom Claes" } },
+      "body": { "contentType": "html", "content": "<p>client asks how much holiday pay they owe in May. holiday allowance is 8% of annual salary no?</p>" },
+      "attachments": [],
+      "reactions": [],
+      "replies": []
+    }
+  ]
+}

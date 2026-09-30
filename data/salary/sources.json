@@ -1,0 +1,55 @@
+{
+  "about": "Fictional salary knowledge for testing the trust score. One entry per claim. Claim ids match src/trust-engine/mock where the same claim exists there. 'expected' is what a good trust score should conclude.",
+  "today": "2026-09-30",
+  "claims": [
+    { "id": "off-idx-200", "file": "indexation/01-official-notice-pc200-2026.txt", "fact": "indexation-2026", "value": "1.8%", "sourceType": "official", "title": "Official notice: PC 200 indexation 2026", "author": null, "date": "2025-12-19", "effectiveFrom": "2026-01-01", "scope": { "country": "BE", "pc": "200" }, "expected": "trusted: the official rule for PC 200" },
+    { "id": "sp-idx-draft", "file": "indexation/02-indexation-guide-2026-draft.md", "fact": "indexation-2026", "value": "2.1%", "sourceType": "sharepoint", "title": "Indexation guide 2026 (draft estimate)", "author": "pieter", "date": "2025-11-15", "status": "draft", "scope": { "country": "BE", "pc": "200" }, "expected": "low: draft estimate, written before the official notice, contradicts it" },
+    { "id": "tm-idx-tom", "file": "indexation/03-teams-payroll-be-indexation.json", "messageId": "1733829300412", "fact": "indexation-2026", "value": "2.1%", "sourceType": "teams", "title": "Teams #payroll-be", "author": "tom", "date": "2025-12-10", "scope": { "country": "BE", "pc": "200" }, "expected": "low: new hire, repeats the draft, contradicts official" },
+    { "id": "tm-idx-anna", "file": "indexation/03-teams-payroll-be-indexation.json", "messageId": "1736071200953", "fact": "indexation-2026", "value": "1.8%", "sourceType": "teams", "title": "Teams #payroll-be", "author": "anna", "date": "2026-01-05", "reactions": ["jan", "lotte", "sofie"], "scope": { "country": "BE", "pc": "200" }, "expected": "trusted: expert, matches official, 2 expert likes" },
+    { "id": "tm-idx-sofie", "file": "indexation/03-teams-payroll-be-indexation.json", "messageId": "1736154000287", "fact": "indexation-2026", "value": "2.1%", "sourceType": "teams", "title": "Teams #payroll-be", "author": "sofie", "date": "2026-01-06", "scope": { "country": "BE", "pc": "200" }, "expected": "low: corrected by an expert in the next reply" },
+    { "id": "tm-idx-anna2", "file": "indexation/03-teams-payroll-be-indexation.json", "messageId": "1736155800634", "fact": "indexation-2026", "value": "1.8%", "sourceType": "teams", "title": "Teams #payroll-be", "author": "anna", "date": "2026-01-06", "corrects": "tm-idx-sofie", "scope": { "country": "BE", "pc": "200" }, "expected": "trusted: expert correction that matches official" },
+    { "id": "tm-idx-nl", "file": "indexation/03-teams-payroll-be-indexation.json", "messageId": "1736506800118", "fact": "indexation-2026", "value": "none (CAO)", "sourceType": "teams", "title": "Teams #payroll-be", "author": "lars", "date": "2026-01-10", "reactions": ["anna"], "scope": { "country": "NL" }, "expected": "excluded for BE cases; the answer for NL cases" },
+    { "id": "off-idx-118", "file": "indexation/04-official-notice-pc118-2026.txt", "fact": "indexation-2026", "value": "2.0%", "sourceType": "official", "title": "Official notice: PC 118 indexation 2026", "author": null, "date": "2025-12-19", "effectiveFrom": "2026-01-01", "scope": { "country": "BE", "pc": "118" }, "expected": "excluded for PC 200; trusted for PC 118" },
+    { "id": "em-idx-janssens", "file": "indexation/05-email-bakkerij-janssens.eml", "fact": "indexation-2026", "value": "2.0% from 1 February", "sourceType": "email", "title": "Email: Bakkerij Janssens indexation", "author": "jan", "date": "2026-01-20", "scope": { "country": "BE", "pc": "118", "client": "bakkerij-janssens" }, "expected": "best answer for Bakkerij Janssens only: client exception, not a conflict" },
+
+    { "id": "off-meal-2026", "file": "meal-vouchers/01-royal-decree-2026-summary.txt", "fact": "meal-voucher-max", "value": "€8.91", "sourceType": "official", "title": "Royal decree: meal vouchers 2026", "author": null, "date": "2025-12-18", "effectiveFrom": "2026-01-01", "scope": { "country": "BE" }, "expected": "trusted: the rule in force" },
+    { "id": "sp-manual-meal", "file": "meal-vouchers/02-payroll-manual-v4-benefits-annex.md", "fact": "meal-voucher-max", "value": "€6.91", "sourceType": "sharepoint", "title": "Payroll manual Belgium v4 - benefits annex", "author": "koen", "date": "2024-02-01", "scope": { "country": "BE" }, "expected": "low: old rule, author left the company" },
+    { "id": "tm-meal-jan", "file": "meal-vouchers/03-teams-payroll-be-meal-vouchers.json", "messageId": "1736676000551", "fact": "meal-voucher-max", "value": "€8.91", "sourceType": "teams", "title": "Teams #payroll-be", "author": "jan", "date": "2026-01-12", "reactions": ["anna"], "scope": { "country": "BE" }, "expected": "trusted: expert, matches official" },
+    { "id": "tm-meal-pieter", "file": "meal-vouchers/03-teams-payroll-be-meal-vouchers.json", "messageId": "1740996180220", "fact": "meal-voucher-max", "value": "€6.91", "sourceType": "teams", "title": "Teams #payroll-be", "author": "pieter", "date": "2026-03-03", "scope": { "country": "BE" }, "expected": "low: contradicts official, corrected by an expert" },
+    { "id": "tm-meal-anna", "file": "meal-vouchers/03-teams-payroll-be-meal-vouchers.json", "messageId": "1740996900874", "fact": "meal-voucher-max", "value": "€8.91", "sourceType": "teams", "title": "Teams #payroll-be", "author": "anna", "date": "2026-03-03", "corrects": "tm-meal-pieter", "scope": { "country": "BE" }, "expected": "trusted: expert correction" },
+    { "id": "em-meal-kroon-question", "file": "meal-vouchers/04-email-client-brouwerij-de-kroon.eml", "fact": "meal-voucher-max", "value": null, "sourceType": "email", "title": "Client question: Brouwerij De Kroon", "author": "client", "date": "2026-09-07", "scope": { "country": "BE", "pc": "200", "client": "brouwerij-de-kroon" }, "expected": "not a source: this is the customer question to answer (answer: €8.91)" },
+
+    { "id": "off-eoy-200", "file": "bonus-and-holiday-pay/01-pc200-end-of-year-bonus-cao.txt", "fact": "end-of-year-bonus", "value": "December", "sourceType": "official", "title": "PC 200 CAO end-of-year bonus", "author": null, "date": "2015-06-09", "effectiveFrom": "2015-06-09", "scope": { "country": "BE", "pc": "200" }, "expected": "trusted for PC 200, except clients with their own agreement" },
+    { "id": "em-eoy-techstart", "file": "bonus-and-holiday-pay/02-email-techstart-agreement.eml", "fact": "end-of-year-bonus", "value": "November", "sourceType": "email", "title": "Email: TechStart Gent payroll agreement", "author": "jan", "date": "2025-10-14", "scope": { "country": "BE", "pc": "200", "client": "techstart-gent" }, "expected": "best answer for TechStart Gent only: allowed by art. 5 of the CAO, so not a contradiction" },
+    { "id": "tm-eoy-sofie", "file": "bonus-and-holiday-pay/03-teams-payroll-be-bonus-holiday.json", "messageId": "1732093200140", "fact": "end-of-year-bonus", "value": "December", "sourceType": "teams", "title": "Teams #payroll-be", "author": "sofie", "date": "2025-11-20", "reactions": ["anna"], "scope": { "country": "BE", "pc": "200" }, "expected": "fine for PC 200 in general; not for TechStart" },
+    { "id": "tm-hol-tom", "file": "bonus-and-holiday-pay/03-teams-payroll-be-bonus-holiday.json", "messageId": "1743584520775", "fact": "holiday-pay", "value": "8%", "sourceType": "teams", "title": "Teams #payroll-be", "author": "tom", "date": "2026-04-02", "scope": { "country": "BE" }, "expected": "low: the Dutch rule leaking into a Belgian case" },
+    { "id": "sp-hol-be", "file": "bonus-and-holiday-pay/04-holiday-pay-be-guide.md", "fact": "holiday-pay", "value": "92%", "sourceType": "sharepoint", "title": "Holiday pay for white-collar employees (Belgium)", "author": "anna", "date": "2026-01-10", "scope": { "country": "BE" }, "expected": "trusted: expert guide, reviewed by Legal, matches the law" },
+    { "id": "sp-hol-nl", "file": "bonus-and-holiday-pay/05-nl-vakantiegeld-confluence.md", "fact": "holiday-pay", "value": "8%", "sourceType": "sharepoint", "title": "Vakantiegeld (vakantiebijslag) - NL", "author": "emma", "date": "2026-02-10", "scope": { "country": "NL" }, "expected": "excluded for BE; correct for NL" }
+  ],
+  "people": {
+    "anna": { "name": "Anna De Smet", "role": "expert", "team": "Payroll BE" },
+    "jan": { "name": "Jan Wouters", "role": "expert", "team": "Payroll BE" },
+    "lotte": { "name": "Lotte Verbeke", "role": "expert", "team": "Payroll BE" },
+    "sofie": { "name": "Sofie Maes", "role": "regular", "team": "Payroll BE" },
+    "pieter": { "name": "Pieter Jacobs", "role": "regular", "team": "Payroll BE" },
+    "koen": { "name": "Koen Maes", "role": "regular", "team": "Payroll BE", "left": true },
+    "tom": { "name": "Tom Claes", "role": "new", "team": "Payroll BE" },
+    "lars": { "name": "Lars de Vries", "role": "expert", "team": "Payroll NL" },
+    "emma": { "name": "Emma Bakker", "role": "regular", "team": "Payroll NL" }
+  },
+  "clients": {
+    "brouwerij-de-kroon": { "name": "Brouwerij De Kroon NV", "country": "BE", "pc": "200", "employees": 80 },
+    "techstart-gent": { "name": "TechStart Gent BV", "country": "BE", "pc": "200" },
+    "bakkerij-janssens": { "name": "Bakkerij Janssens", "country": "BE", "pc": "118" }
+  },
+  "testQuestions": [
+    { "question": "What is the indexation for PC 200 in January 2026?", "context": { "country": "BE", "pc": "200" }, "expectedAnswer": "1.8%" },
+    { "question": "What is the indexation for Bakkerij Janssens?", "context": { "client": "bakkerij-janssens" }, "expectedAnswer": "2.0% from 1 February" },
+    { "question": "Is there an indexation in the Netherlands?", "context": { "country": "NL" }, "expectedAnswer": "none (CAO)" },
+    { "question": "What is the max employer part of a meal voucher?", "context": { "client": "brouwerij-de-kroon" }, "expectedAnswer": "€8.91" },
+    { "question": "When is the end-of-year bonus paid?", "context": { "country": "BE", "pc": "200" }, "expectedAnswer": "December" },
+    { "question": "When is the end-of-year bonus paid?", "context": { "client": "techstart-gent" }, "expectedAnswer": "November" },
+    { "question": "How much is holiday pay?", "context": { "country": "BE" }, "expectedAnswer": "92%" },
+    { "question": "How much is holiday pay?", "context": { "country": "NL" }, "expectedAnswer": "8%" }
+  ]
+}

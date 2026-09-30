@@ -1,0 +1,31 @@
+{
+  "_about": "Synthetic registry of legal sources (metric 2: Law anchor). All references are fictional ([SYNTH]).",
+  "rules": [
+    {
+      "ref": "[SYNTH] KB-2025-MV-10",
+      "key": "BE/PC200/meal_voucher_max_face_value",
+      "value": 10, "unit": "EUR",
+      "valid_from": "2026-01-01", "valid_to": null,
+      "published_on": "2025-12-19",
+      "changed_on": "2026-01-01",
+      "replaces": "[SYNTH] KB-2010-MV-8"
+    },
+    {
+      "ref": "[SYNTH] KB-2010-MV-8",
+      "key": "BE/PC200/meal_voucher_max_face_value",
+      "value": 8, "unit": "EUR",
+      "valid_from": "2016-01-01", "valid_to": "2025-12-31",
+      "published_on": "2015-12-01",
+      "changed_on": "2016-01-01",
+      "replaced_by": "[SYNTH] KB-2025-MV-10"
+    },
+    {
+      "ref": "[SYNTH] CCT-124-2026-02",
+      "key": "BE/PC124/meal_voucher_max_face_value",
+      "value": 10, "unit": "EUR",
+      "valid_from": "2026-03-01", "valid_to": null,
+      "published_on": "2026-02-01",
+      "changed_on": "2026-03-01"
+    }
+  ]
+}

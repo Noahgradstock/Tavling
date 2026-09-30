@@ -1,0 +1,8 @@
+{
+  "_about": "Synthetic payroll engine configuration: what the payroll engine ACTUALLY applies on payslips (metric 1: System agreement).",
+  "params": [
+    { "key": "BE/PC200/meal_voucher_max_face_value", "value": 10, "unit": "EUR", "active_since": "2026-01-01", "payslips_per_month_using_it": 184000 },
+    { "key": "BE/PC124/meal_voucher_max_face_value", "value": 10, "unit": "EUR", "active_since": "2026-03-01", "payslips_per_month_using_it": 41000 },
+    { "key": "BE/PC200/meal_voucher_min_employee_contribution", "value": 1.09, "unit": "EUR", "active_since": "2010-01-01", "payslips_per_month_using_it": 184000 }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "_about": "Deterministic trust scoring rules. The code reads these; no LLM decides a score.",
+  "gate": {
+    "fail_if": [
+      {
+        "field": "country",
+        "rule": "label != case_card",
+        "reason": "For {label}, your case is {case}"
+      },
+      {
+        "field": "pc",
+        "rule": "label != case_card (only when the label comes from text/metadata/registry/human, or from the LLM with conf >= 0.9)",
+        "reason": "For PC {label}, your case is PC {case}"
+      },
+      {
+        "field": "topic",
+        "rule": "label != case_card",
+        "reason": "Different topic"
+      },
+      {
+        "field": "valid_to",
+        "rule": "valid_to < case_date",
+        "reason": "Expired on {valid_to}"
+      },
+      {
+        "field": "superseded_by",
+        "rule": "not null",
+        "reason": "Replaced by {superseded_by}"
+      }
+    ],
+    "unknown_if": [
+      {
+        "field": "pc",
+        "rule": "null, or via llm/container with conf < 0.9",
+        "reason": "Sector not proven ({via})"
+      }
+    ]
+  },
+  "metrics": [
+    {
+      "id": 1,
+      "name": "System agreement",
+      "max": 20,
+      "rule": "claim.value == engine_params[claim.key].value ? 20 : 0",
+      "flag_if_zero": "The payroll engine uses {engine_value}, but this source says {value}"
+    },
+    {
+      "id": 2,
+      "name": "Law anchor",
+      "max": 15,
+      "rule": "+8 if legal_ref matches the registry rule currently valid for claim.key; +7 if reviewed_on >= registry.changed_on",
+      "flag_if_partial": "The law changed on {changed_on}, after this source was last reviewed ({reviewed_on})"
+    },
+    {
+      "id": 3,
+      "name": "Authority and owner",
+      "max": 15,
+      "rule": "type points (doc 8, email 4, teams 1) + 7 if the owner is active",
+      "flag_if": "Owner {name} left SD Worx on {left_on}"
+    },
+    {
+      "id": 4,
+      "name": "Expert endorsement",
+      "max": 15,
+      "rule": "15 if confirmed by a person with >= 10 decisions in this country/PC; 8 if confirmed by another colleague; else 0"
+    },
+    {
+      "id": 5,
+      "name": "Outcome record",
+      "max": 15,
+      "rule": "times_used < 5: 0 ('not enough history'); correction rate < 2%: 15; < 10%: 8; else 0",
+      "flag_if_zero": "{corrections}/{uses} uses were corrected afterwards"
+    },
+    {
+      "id": 6,
+      "name": "Independent agreement",
+      "max": 10,
+      "rule": "Count other sources that pass the gate, have the same claim value and a different copy_group: >= 2 → 10, 1 → 5, 0 → 0"
+    },
+    {
+      "id": 7,
+      "name": "Doubt signal",
+      "max": 10,
+      "rule": "Teams questions in the last 90 days: 0–1 → 10, 2–4 → 5, >= 5 → 0"
+    }
+  ],
+  "warnings": [
+    {
+      "id": "contradiction",
+      "rule": "another gate-passing source has a different claim value",
+      "effect": "flag on every source involved; cap at yellow only if a contradicting source also scores >= 80"
+    },
+    {
+      "id": "language_drift",
+      "rule": "translation_of is set and reviewed_on < original.reviewed_on",
+      "effect": "flag"
+    },
+    {
+      "id": "ai_only_scope",
+      "rule": "a critical label comes only from llm/container",
+      "effect": "cap at yellow"
+    }
+  ],
+  "colors": {
+    "green": ">= 80",
+    "yellow": "40-79",
+    "red": "< 40 or gate fail"
+  }
+}

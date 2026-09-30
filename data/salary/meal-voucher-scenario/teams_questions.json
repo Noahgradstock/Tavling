@@ -1,0 +1,20 @@
+{
+  "_about": "Synthetic 'doubt signal' (metric 7): questions asked in Teams within 7 days after someone opened this source, in the last 90 days.",
+  "questions": [
+    { "source": "SRC-01", "on": "2026-08-12", "by": "P-AMIRA", "text": "Geldt die €10 ook voor deeltijdse bedienden?" },
+
+    { "source": "SRC-05", "on": "2026-07-02", "by": "P-AMIRA", "text": "Tom zegt €8, maar de procedure zegt €10?" },
+    { "source": "SRC-05", "on": "2026-07-19", "by": "P-TOM", "text": "Klant zegt dat andere sociale secretariaten €10 toepassen, klopt dat?" },
+    { "source": "SRC-05", "on": "2026-08-04", "by": "P-LIEN", "text": "Welke is nu juist, €8 of €10?" },
+    { "source": "SRC-05", "on": "2026-08-21", "by": "P-SOFIE", "text": "Waarom staat er bij klant X nog €8?" },
+    { "source": "SRC-05", "on": "2026-09-09", "by": "P-AMIRA", "text": "Iemand die zeker weet wat het max is voor PC 200?" },
+    { "source": "SRC-05", "on": "2026-09-24", "by": "P-LIEN", "text": "Nog steeds €8 voor bedienden??" },
+
+    { "source": "SRC-07", "on": "2026-07-15", "by": "P-AMIRA", "text": "Checklist zegt €8 maar de engine zet €10, wat klopt?" },
+    { "source": "SRC-07", "on": "2026-08-30", "by": "P-TOM", "text": "Moet de onboarding checklist niet aangepast worden?" },
+    { "source": "SRC-07", "on": "2026-09-18", "by": "P-LIEN", "text": "Is de checklist 2026 up-to-date?" },
+
+    { "source": "SRC-08", "on": "2026-08-05", "by": "P-JULIEN", "text": "La version FR dit 8 €, la version NL dit 10 € ?" },
+    { "source": "SRC-08", "on": "2026-09-02", "by": "P-JULIEN", "text": "Qui est responsable de la procédure FR ?" }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1736676000551",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-01-12T10:00:00.551Z",
+      "from": { "user": { "id": "u-jwouters", "displayName": "Jan Wouters" } },
+      "body": { "contentType": "html", "content": "<p>Reminder: meal voucher employer part is max EUR 8.91 from this year (face value EUR 10). Clients who want to raise it need a new CAO or individual agreement first.</p>" },
+      "attachments": [],
+      "reactions": [
+        { "reactionType": "like", "user": { "user": { "id": "u-adesmet", "displayName": "Anna De Smet" } } }
+      ],
+      "replies": []
+    },
+    {
+      "id": "1740996180220",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-03-03T10:03:00.220Z",
+      "from": { "user": { "id": "u-pjacobs", "displayName": "Pieter Jacobs" } },
+      "body": { "contentType": "html", "content": "<p>max employer part meal voucher = 6.91 right? client wants to go to the max</p>" },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1740996900874",
+          "replyToId": "1740996180220",
+          "createdDateTime": "2026-03-03T10:15:00.874Z",
+          "from": { "user": { "id": "u-adesmet", "displayName": "Anna De Smet" } },
+          "body": { "contentType": "html", "content": "<p>@Pieter it went up to 8.91 in January. The manual (annex B) is still on the old amount, I'll ask to update it.</p>" },
+          "attachments": [],
+          "reactions": [
+            { "reactionType": "like", "user": { "user": { "id": "u-pjacobs", "displayName": "Pieter Jacobs" } } }
+          ]
+        }
+      ]
+    }
+  ]
+}
