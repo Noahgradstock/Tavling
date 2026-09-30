@@ -32,6 +32,7 @@ export type Claim = {
   text: string;
   reactions?: string[]; // person ids who gave a thumbs-up
   corrects?: string; // id of the claim this one replies to and corrects
+  file?: string; // source file under data/, when the claim comes from real data
 };
 
 export type FeedbackKind = "correct" | "wrong" | "outdated" | "not_applicable";

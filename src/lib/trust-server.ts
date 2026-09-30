@@ -1,7 +1,9 @@
-import { MemoryFeedbackStore, MOCK_NOW, mockKnowledgeBase, type KnowledgeBase } from "@/trust-engine";
+import { MemoryFeedbackStore, MOCK_NOW, type KnowledgeBase } from "@/trust-engine";
+import { loadDataKnowledgeBase } from "@/trust-engine/data";
 
 // Server-side wiring for the trust engine. Swap these three for real data, Firestore and a real clock later.
-export const kb: KnowledgeBase = mockKnowledgeBase;
+// Knowledge comes from the source files in data/salary (mock claims fill topics without files yet).
+export const kb: KnowledgeBase = loadDataKnowledgeBase().kb;
 export const feedbackStore = new MemoryFeedbackStore();
 export const now = () => MOCK_NOW;
 

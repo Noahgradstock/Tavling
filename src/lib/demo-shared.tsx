@@ -45,7 +45,7 @@ export function toCard(c: Claim, people: Record<string, Person>): DocCard {
     short: c.source.type === "teams" ? `Teams · ${first}` : c.source.title,
     title: c.source.title,
     channel: CHANNEL[c.source.type],
-    file: `${c.source.title.replace(/[^\p{L}\p{N}]+/gu, "_").replace(/^_|_$/g, "").slice(0, 26)}.${EXT[c.source.type]}`,
+    file: c.file ? c.file.split("/").pop()! : `${c.source.title.replace(/[^\p{L}\p{N}]+/gu, "_").replace(/^_|_$/g, "").slice(0, 26)}.${EXT[c.source.type]}`,
     country: c.scope.country,
     date: c.effectiveFrom ?? c.date,
     text: c.text,

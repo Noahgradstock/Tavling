@@ -18,6 +18,7 @@ export const POINTS = {
   // Layer 4 – consistency with the official source
   matchesOfficial: 2.0,
   contradictsOfficial: -3.0,
+  clientException: 0.5, // client agreement deviating from a sector rule: an exception, not an error
   // Layer 5 – relevance: how specific is it to the asker's case?
   relevance: { client: 1.5, sector: 1.0, country: 0.3 },
   // Layer 6 – usage feedback

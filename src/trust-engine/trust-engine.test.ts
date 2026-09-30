@@ -98,3 +98,14 @@ test("a client id overrides a claimed country or sector", () => {
   });
   assert.equal(parseContext({ country: "belgium" }, kb), null);
 });
+
+test("real data: every test question in data/salary gets the expected answer", async () => {
+  const { loadDataKnowledgeBase } = await import("./data");
+  const { sameValue } = await import("./score");
+  const { kb: dataKb, testQuestions } = loadDataKnowledgeBase();
+  assert.ok(testQuestions.length >= 8);
+  for (const t of testQuestions) {
+    const r = ask(t.question, parseContext(t.context, dataKb)!, dataKb, [], MOCK_NOW);
+    assert.ok(r.matched && r.best && sameValue(r.best.claim.value, t.expectedAnswer), `${t.question} ${JSON.stringify(t.context)}`);
+  }
+});

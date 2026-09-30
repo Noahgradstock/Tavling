@@ -43,6 +43,7 @@ function scoreClaim(
   fact: Fact,
   siblings: Claim[],
   ref: Claim | null,
+  refRelevance: Relevance,
   people: Map<string, Person>,
   feedback: Feedback[],
   now: Date,
@@ -91,15 +92,18 @@ function scoreClaim(
     add("corroboration", "Corrected", `Corrected by ${who ?? "a colleague"}`, POINTS.corrected);
   }
 
-  // Layer 4 – consistency with the official source
-  if (ref && !isOfficial) {
+  // Layer 4 – consistency with the official source. A client agreement that deviates from a
+  // sector or country rule is an exception, not a contradiction.
+  const isException = !!ref && !isOfficial && !matchesRef && specificity[relevance] > specificity[refRelevance];
+  if (isException) add("consistency", "Client exception", `Client agreement that deviates from ${ref!.source.title}`, POINTS.clientException);
+  else if (ref && !isOfficial) {
     if (matchesRef) add("consistency", "Matches law", `Matches ${ref.source.title}`, POINTS.matchesOfficial);
     else {
       add("consistency", "Contradicts law", `Contradicts ${ref.source.title} (${ref.value})`, POINTS.contradictsOfficial);
       caps.push({ label: "contradicts the official source", max: CAPS.contradictsOfficial });
     }
   }
-  if (!isOfficial && author?.role !== "expert" && thumbs === 0 && !matchesRef) {
+  if (!isOfficial && author?.role !== "expert" && thumbs === 0 && !matchesRef && !isException) {
     caps.push({ label: "no expert or official source backs it", max: CAPS.noExpertBacking });
   }
 
@@ -147,12 +151,19 @@ export function evaluateFact(fact: Fact, kb: KnowledgeBase, ctx: Context, feedba
   }
 
   const ref = officialReference(relevant, now);
+  const refRelevance = relevant.find((r) => r.claim.id === ref?.id)?.relevance ?? "country";
   const siblings = relevant.map((r) => r.claim);
   const claims = relevant
-    .map((r) => scoreClaim(r.claim, r.relevance, fact, siblings, ref, people, feedback, now))
+    .map((r) => scoreClaim(r.claim, r.relevance, fact, siblings, ref, refRelevance, people, feedback, now))
     .sort((a, b) => b.score - a.score || specificity[b.relevance] - specificity[a.relevance]);
 
-  const best = claims[0] ?? null;
+  // The most specific trusted claim wins (a client agreement beats the sector rule); otherwise the highest score.
+  const trusted = claims.filter((c) => c.score >= STATUS.trusted);
+  const best = trusted.sort((a, b) => specificity[b.relevance] - specificity[a.relevance] || b.score - a.score)[0] ?? claims[0] ?? null;
+  if (best) {
+    claims.splice(claims.indexOf(best), 1);
+    claims.unshift(best);
+  }
   return { fact, status: statusOf(best, claims, people), best, claims, excluded };
 }
 
